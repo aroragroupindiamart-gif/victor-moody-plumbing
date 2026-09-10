@@ -1,10 +1,10 @@
-import { getStates } from "@/lib/data";
+import { getDripStates } from "@/lib/data";
 import { SITE_URL } from "@/lib/config";
 
 const MAX_URLS = 50000;
 
 export async function GET() {
-  const states = await getStates();
+  const states = await getDripStates();
   const today = new Date().toISOString().split("T")[0];
 
   const entries: string[] = [];
@@ -15,7 +15,7 @@ export async function GET() {
     for (let i = 1; i <= totalFiles; i++) {
       const suffix = i === 1 ? "" : `-${i}`;
       entries.push(
-        `  <sitemap>\n    <loc>${SITE_URL}/sitemap/${sc}${suffix}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+        `  <sitemap>\n    <loc>${SITE_URL}/sitemap/${sc}${suffix}.xml</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
       );
     }
   }

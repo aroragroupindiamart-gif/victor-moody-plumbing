@@ -11,6 +11,8 @@ export const SCHEMA_TYPE    = process.env.NEXT_PUBLIC_SCHEMA_TYPE    ?? "Plumber
 export const GA_ID      = process.env.NEXT_PUBLIC_GA_ID      ?? "";
 export const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID ?? "";
 export const GSC_TOKEN  = process.env.NEXT_PUBLIC_GSC_TOKEN  ?? "";
+// Site launch date (YYYY-MM-DD) for automated drip feeding
+export const LAUNCH_DATE = process.env.NEXT_PUBLIC_LAUNCH_DATE ?? "";
 
 /**
  * Per-site offset for spintax variant selection (see lib/spintax.ts).

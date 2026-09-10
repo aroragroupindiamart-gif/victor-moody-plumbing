@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getStates } from "@/lib/data";
+import { getDripStates } from "@/lib/data";
 import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, NICHE_PLURAL, SCHEMA_TYPE, SITE_URL } from "@/lib/config";
 import Footer from "@/components/Footer";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const states = await getStates();
+  const states = await getDripStates();
   const totalPages     = states.reduce((sum, s) => sum + s.page_count, 0);
   const totalLocations = states.reduce((sum, s) => sum + s.location_count, 0);
 

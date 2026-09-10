@@ -1,5 +1,6 @@
 import locationsRaw from "./data/locations.json";
 import servicesRaw from "./data/services.json";
+import { LAUNCH_DATE } from "./config";
 
 export interface Service {
   id: number;
@@ -134,4 +135,28 @@ export async function getNearbyLocations(locationId: number, stateCode: string, 
   )
     .sort((a, b) => b.population - a.population)
     .slice(0, limit);
+}
+
+export function getDripCount(totalStatesCount: number): number {
+  const envCount = process.env.NEXT_PUBLIC_DRIP_COUNT;
+  if (envCount && !isNaN(Number(envCount))) {
+    return Math.min(Number(envCount), totalStatesCount);
+  }
+  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE;
+  if (!launchStr) return totalStatesCount;
+
+  const launch = new Date(launchStr).getTime();
+  const now = Date.now();
+  const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
+
+  if (daysElapsed < 7) return Math.min(10, totalStatesCount);
+  if (daysElapsed < 14) return Math.min(20, totalStatesCount);
+  if (daysElapsed < 21) return Math.min(35, totalStatesCount);
+  return totalStatesCount;
+}
+
+export async function getDripStates(): Promise<StateRow[]> {
+  const allStates = await getStates();
+  const count = getDripCount(allStates.length);
+  return allStates.slice(0, count);
 }

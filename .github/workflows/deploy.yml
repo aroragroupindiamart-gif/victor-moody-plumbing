@@ -71,6 +71,7 @@ jobs:
           NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
           NEXT_PUBLIC_ADSENSE_ID: ${{ secrets.NEXT_PUBLIC_ADSENSE_ID }}
           NEXT_PUBLIC_GSC_TOKEN: ${{ secrets.NEXT_PUBLIC_GSC_TOKEN }}
+          NEXT_PUBLIC_LAUNCH_DATE: ${{ secrets.NEXT_PUBLIC_LAUNCH_DATE }}
           NEXT_PUBLIC_CONTENT_SALT: ${{ secrets.NEXT_PUBLIC_CONTENT_SALT }}
 
       - name: Deploy to Cloudflare Workers
