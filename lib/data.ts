@@ -149,10 +149,10 @@ export function getDripCount(totalStatesCount: number): number {
   const now = Date.now();
   const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
 
-  if (daysElapsed < 7) return Math.min(10, totalStatesCount);
-  if (daysElapsed < 14) return Math.min(20, totalStatesCount);
-  if (daysElapsed < 21) return Math.min(35, totalStatesCount);
-  return totalStatesCount;
+  if (daysElapsed < 7) return Math.min(3, totalStatesCount);   // Week 1: 3 states (~8k-10k pages)
+  if (daysElapsed < 14) return Math.min(10, totalStatesCount); // Week 2: 10 states (~35k pages)
+  if (daysElapsed < 21) return Math.min(25, totalStatesCount); // Week 3: 25 states (~85k pages)
+  return totalStatesCount;                                     // Week 4+: All 50 states (200k pages)
 }
 
 export async function getDripStates(): Promise<StateRow[]> {
