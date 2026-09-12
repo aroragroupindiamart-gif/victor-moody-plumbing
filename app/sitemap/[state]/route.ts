@@ -15,7 +15,8 @@ interface RouteProps {
 export async function GET(_req: Request, { params }: RouteProps) {
   const { state } = await params;
 
-  const match = state.match(/^([a-z]{2})(?:-(\d+))?$/);
+  const clean = state.replace(/\.xml$/, "");
+  const match = clean.match(/^([a-z]{2})(?:-(\d+))?$/);
   if (!match) return new Response("Not Found", { status: 404 });
 
   const stateCode = match[1].toUpperCase();
