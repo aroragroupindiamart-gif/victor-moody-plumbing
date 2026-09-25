@@ -8,6 +8,10 @@ const nextConfig = {
         source: "/sitemap/:state(\\w+(?:-\\d+)?)\\.xml",
         destination: "/sitemap/:state",
       },
+      {
+        source: "/:state([a-z]{2}(?:-\\d+)?)\\.xml",
+        destination: "/sitemap/:state",
+      },
     ];
   },
 };
