@@ -22,3 +22,7 @@ export const LAUNCH_DATE = process.env.NEXT_PUBLIC_LAUNCH_DATE ?? "";
  * for the same city/service pair.
  */
 export const CONTENT_SALT = Number(process.env.NEXT_PUBLIC_CONTENT_SALT ?? 0) || 0;
+
+export const DESIGN_CONCEPT = process.env.NEXT_PUBLIC_DESIGN_CONCEPT ?? "";
+const CONCEPTS_LIST = ["dispatch", "credential", "journey", "hyperlocal", "onethumb"];
+export const ACTIVE_CONCEPT = DESIGN_CONCEPT || CONCEPTS_LIST[Math.abs(CONTENT_SALT) % CONCEPTS_LIST.length];

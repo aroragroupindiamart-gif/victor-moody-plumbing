@@ -78,8 +78,20 @@ export async function getStates(): Promise<StateRow[]> {
     }
   }
   return Array.from(map.values()).sort((a, b) =>
-    a.state_name.localeCompare(b.state_name)
+    b.location_count - a.location_count || a.state_name.localeCompare(b.state_name)
   );
+}
+
+export async function getFeaturedLocations(salt = 0, count = 16): Promise<Location[]> {
+  const topMetros = ALL_LOCATIONS
+    .filter((l) => l.population >= 100000)
+    .sort((a, b) => b.population - a.population);
+
+  if (topMetros.length === 0) return ALL_LOCATIONS.slice(0, count);
+
+  const maxOffset = Math.max(1, topMetros.length - count);
+  const offset = Math.abs(salt * 7) % maxOffset;
+  return topMetros.slice(offset, offset + count);
 }
 
 export async function getStateByCode(stateCode: string): Promise<StateRow | null> {
@@ -149,10 +161,11 @@ export function getDripCount(totalStatesCount: number): number {
   const now = Date.now();
   const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
 
-  if (daysElapsed < 7) return Math.min(3, totalStatesCount);   // Week 1: 3 states (~8k-10k pages)
-  if (daysElapsed < 14) return Math.min(10, totalStatesCount); // Week 2: 10 states (~35k pages)
-  if (daysElapsed < 21) return Math.min(25, totalStatesCount); // Week 3: 25 states (~85k pages)
-  return totalStatesCount;                                     // Week 4+: All 50 states (200k pages)
+  if (daysElapsed < 5) return Math.min(3, totalStatesCount);    // Days 1-4: Top 3 high-pop states
+  if (daysElapsed < 12) return Math.min(8, totalStatesCount);   // Days 5-11: Top 8 high-pop states
+  if (daysElapsed < 20) return Math.min(18, totalStatesCount);  // Days 12-19: Top 18 states
+  if (daysElapsed < 30) return Math.min(32, totalStatesCount);  // Days 20-29: Top 32 states
+  return totalStatesCount;                                      // Day 30+: All 50 states
 }
 
 export async function getDripStates(): Promise<StateRow[]> {
