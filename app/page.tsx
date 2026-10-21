@@ -8,6 +8,8 @@ import {
 import Footer from "@/components/Footer";
 import { tokens } from "@/lib/tokens";
 
+export const revalidate = 2592000; // 30 days edge cache
+
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
   openGraph: { url: SITE_URL },

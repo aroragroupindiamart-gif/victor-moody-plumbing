@@ -192,14 +192,22 @@ export async function getDripServices(): Promise<Service[]> {
   return ALL_SERVICES.slice(0, count);
 }
 
-export async function isLocationAndServiceAllowed(stateCode: string, placeSlug: string, serviceSlug: string): Promise<boolean> {
+export async function isLocationAllowed(stateCode: string, placeSlug: string): Promise<boolean> {
   const dripLocs = await getDripLocations();
-  const isLocAllowed = dripLocs.some((l) => l.state_code === stateCode && l.place_slug === placeSlug);
+  return dripLocs.some((l) => l.state_code === stateCode && l.place_slug === placeSlug);
+}
+
+export async function getDripLocationsByState(stateCode: string): Promise<Location[]> {
+  const dripLocs = await getDripLocations();
+  return dripLocs.filter((l) => l.state_code === stateCode);
+}
+
+export async function isLocationAndServiceAllowed(stateCode: string, placeSlug: string, serviceSlug: string): Promise<boolean> {
+  const isLocAllowed = await isLocationAllowed(stateCode, placeSlug);
   if (!isLocAllowed) return false;
 
   const dripSvcs = await getDripServices();
-  const isSvcAllowed = dripSvcs.some((s) => s.service_slug === serviceSlug);
-  return isSvcAllowed;
+  return dripSvcs.some((s) => s.service_slug === serviceSlug);
 }
 
 export async function getDripStates(): Promise<StateRow[]> {

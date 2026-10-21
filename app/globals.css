@@ -1,155 +1,25 @@
 @import "tailwindcss";
 
-:root {
-  --color-accent:       #f97316;
-  --color-accent-hover: #ea6c10;
-  --color-bg:           #0a0f1e;
-  --color-bg-card:      #111827;
-  --color-bg-nav:       #0d1526;
-  --color-text:         #f1f5f9;
-  --color-text-muted:   #94a3b8;
-  --color-border:       #1e293b;
+html {
+  scroll-behavior: smooth;
 }
-
-html { scroll-behavior: smooth; }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.nav-scrolled {
-  background-color: rgba(10, 15, 30, 0.97) !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.announcement-bar {
-  background: linear-gradient(90deg, #1e3a5f 0%, #0f2744 100%);
-  border-bottom: 1px solid rgba(249, 115, 22, 0.2);
-}
-
-.hero-gradient {
-  background: linear-gradient(135deg, #0a0f1e 0%, #0f1f3d 50%, #071530 100%);
-}
-
-.contact-card {
-  background: #ffffff;
-  color: #0a0f1e;
-  border-radius: 8px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-.feature-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  transition: border-color 0.2s;
-}
-.feature-card:hover { border-color: rgba(249, 115, 22, 0.4); }
-
-.state-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 14px;
-  text-decoration: none;
-  transition: border-color 0.2s, transform 0.1s;
-  display: block;
-}
-.state-card:hover {
-  border-color: rgba(249, 115, 22, 0.5);
-  transform: translateY(-1px);
-}
-
-.service-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 18px;
-  text-decoration: none;
-  display: block;
-  transition: border-color 0.2s;
-}
-.service-card:hover { border-color: rgba(249, 115, 22, 0.5); }
-
-.btn-primary {
-  background-color: var(--color-accent);
-  color: white;
-  font-weight: 700;
-  padding: 14px 28px;
-  border-radius: 6px;
-  text-decoration: none;
-  display: inline-block;
-  transition: background-color 0.2s;
-}
-.btn-primary:hover { background-color: var(--color-accent-hover); }
-
-.btn-secondary {
-  background-color: transparent;
-  color: white;
-  font-weight: 600;
-  padding: 13px 27px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-decoration: none;
-  display: inline-block;
-  transition: border-color 0.2s, background-color 0.2s;
-}
-.btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.badge-pill {
-  background: rgba(249, 115, 22, 0.15);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  color: #fb923c;
-  border-radius: 9999px;
-  padding: 4px 14px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.faq-item { border-bottom: 1px solid var(--color-border); }
-.faq-item summary {
-  cursor: pointer;
-  list-style: none;
-  padding: 18px 0;
-  font-weight: 600;
-  color: var(--color-text);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.faq-item summary::-webkit-details-marker { display: none; }
-.faq-answer {
-  padding-bottom: 18px;
-  color: var(--color-text-muted);
-  line-height: 1.7;
-}
-
-.mobile-sticky-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: var(--color-accent);
-  display: none;
+/* Accessible focus outline */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
 }
 
 @media (max-width: 768px) {
-  .mobile-sticky-bar { display: block; }
-  .nav-context-label  { display: none !important; }
-  .nav-links          { display: none !important; }
-  .nav-phone-btn      { padding: 8px 12px !important; font-size: 0.78rem !important; }
-  .service-hero-grid  { grid-template-columns: 1fr !important; }
-  .contact-card-wrapper {
-    min-width: unset !important;
-    max-width: unset !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  .two-col-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .nav-context-label { display: none !important; }
+  .nav-links         { display: none !important; }
+  .nav-phone-btn     { padding: 8px 14px !important; font-size: 0.8rem !important; }
 }
