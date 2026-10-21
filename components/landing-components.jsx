@@ -51,7 +51,9 @@ import React, { useId, useState } from "react";
 /* ================================================================
  * 1. DESIGN TOKENS — one object per concept
  * ================================================================ */
-export const tokens = {
+import { tokens } from "@/lib/tokens";
+export { tokens };
+const _localTokens = {
   dispatch: {
     name: "Dispatch Command",
     palette: {

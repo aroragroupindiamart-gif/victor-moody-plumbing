@@ -33,6 +33,11 @@ export interface StateRow {
 const ALL_LOCATIONS = locationsRaw as unknown as Location[];
 const ALL_SERVICES  = servicesRaw  as unknown as Service[];
 
+// Sort all US locations by population descending (Tier 1 Metro Priority)
+const POPULATION_SORTED_LOCATIONS = ALL_LOCATIONS.slice().sort(
+  (a, b) => b.population - a.population || a.place_name.localeCompare(b.place_name)
+);
+
 const locationByKey = new Map<string, Location>();
 const locationById  = new Map<number, Location>();
 const serviceBySlug = new Map<string, Service>();
@@ -83,10 +88,7 @@ export async function getStates(): Promise<StateRow[]> {
 }
 
 export async function getFeaturedLocations(salt = 0, count = 16): Promise<Location[]> {
-  const topMetros = ALL_LOCATIONS
-    .filter((l) => l.population >= 100000)
-    .sort((a, b) => b.population - a.population);
-
+  const topMetros = POPULATION_SORTED_LOCATIONS.filter((l) => l.population >= 100000);
   if (topMetros.length === 0) return ALL_LOCATIONS.slice(0, count);
 
   const maxOffset = Math.max(1, topMetros.length - count);
@@ -149,27 +151,78 @@ export async function getNearbyLocations(locationId: number, stateCode: string, 
     .slice(0, limit);
 }
 
-export function getDripCount(totalStatesCount: number): number {
+/* ================================================================
+ * POPULATION-PRIORITY DRIP ENGINE (500 URLs / Day Natural Growth)
+ * ================================================================ */
+
+export function getDripLocationsCount(): number {
   const envCount = process.env.NEXT_PUBLIC_DRIP_COUNT;
   if (envCount && !isNaN(Number(envCount))) {
-    return Math.min(Number(envCount), totalStatesCount);
+    return Math.min(Number(envCount), POPULATION_SORTED_LOCATIONS.length);
   }
-  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE;
-  if (!launchStr) return totalStatesCount;
-
+  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE || new Date().toISOString().split("T")[0];
   const launch = new Date(launchStr).getTime();
   const now = Date.now();
   const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
 
-  if (daysElapsed < 5) return Math.min(3, totalStatesCount);    // Days 1-4: Top 3 high-pop states
-  if (daysElapsed < 12) return Math.min(8, totalStatesCount);   // Days 5-11: Top 8 high-pop states
-  if (daysElapsed < 20) return Math.min(18, totalStatesCount);  // Days 12-19: Top 18 states
-  if (daysElapsed < 30) return Math.min(32, totalStatesCount);  // Days 20-29: Top 32 states
-  return totalStatesCount;                                      // Day 30+: All 50 states
+  // Day 0/1: Top 60 cities (includes Anaheim & all Tier-1 metros). Each day expands by 50 cities (~500 URLs/day)
+  const allowed = 60 + daysElapsed * 50;
+  return Math.min(allowed, POPULATION_SORTED_LOCATIONS.length);
+}
+
+export function getDripServicesCount(daysElapsed = 0): number {
+  if (daysElapsed < 14) return 10;   // Weeks 1-2: Core 10 high-intent services
+  if (daysElapsed < 30) return 25;   // Weeks 3-4: Top 25 services
+  return ALL_SERVICES.length;        // Day 30+: All 150 services
+}
+
+export async function getDripLocations(): Promise<Location[]> {
+  const count = getDripLocationsCount();
+  return POPULATION_SORTED_LOCATIONS.slice(0, count);
+}
+
+export async function getDripServices(): Promise<Service[]> {
+  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE;
+  let daysElapsed = 0;
+  if (launchStr) {
+    const launch = new Date(launchStr).getTime();
+    daysElapsed = Math.max(0, Math.floor((Date.now() - launch) / (1000 * 60 * 60 * 24)));
+  }
+  const count = getDripServicesCount(daysElapsed);
+  return ALL_SERVICES.slice(0, count);
+}
+
+export async function isLocationAndServiceAllowed(stateCode: string, placeSlug: string, serviceSlug: string): Promise<boolean> {
+  const dripLocs = await getDripLocations();
+  const isLocAllowed = dripLocs.some((l) => l.state_code === stateCode && l.place_slug === placeSlug);
+  if (!isLocAllowed) return false;
+
+  const dripSvcs = await getDripServices();
+  const isSvcAllowed = dripSvcs.some((s) => s.service_slug === serviceSlug);
+  return isSvcAllowed;
 }
 
 export async function getDripStates(): Promise<StateRow[]> {
-  const allStates = await getStates();
-  const count = getDripCount(allStates.length);
-  return allStates.slice(0, count);
+  const dripLocs = await getDripLocations();
+  const dripSvcs = await getDripServices();
+  const stateMap = new Map<string, { state_code: string; state_name: string; location_count: number; page_count: number }>();
+
+  for (const loc of dripLocs) {
+    const existing = stateMap.get(loc.state_code);
+    if (existing) {
+      existing.location_count++;
+      existing.page_count += dripSvcs.length;
+    } else {
+      stateMap.set(loc.state_code, {
+        state_code: loc.state_code,
+        state_name: loc.state_name,
+        location_count: 1,
+        page_count: dripSvcs.length,
+      });
+    }
+  }
+
+  return Array.from(stateMap.values()).sort((a, b) =>
+    b.location_count - a.location_count || a.state_name.localeCompare(b.state_name)
+  );
 }

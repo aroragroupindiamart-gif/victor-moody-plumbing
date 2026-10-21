@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import {
   getLocation, getService,
   getSiblingServices, getNearbyLocations,
-  isServiceAllowedForTier,
+  isLocationAndServiceAllowed,
 } from "@/lib/data";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, SITE_URL,
@@ -13,7 +13,14 @@ import {
 import { selectVariant } from "@/lib/spintax";
 import { CONTENT_PACK, renderTemplate } from "@/lib/content";
 import Footer from "@/components/Footer";
-import { CONCEPTS } from "@/components/landing-components";
+import {
+  DispatchCommandPage,
+  CredentialPremiumPage,
+  GuidedJourneyPage,
+  HyperlocalProofPage,
+  OneThumbSpeedPage,
+  tokens,
+} from "@/components/landing-components";
 
 export const revalidate = 2592000; // 30 days
 export const dynamicParams = true;
@@ -22,12 +29,21 @@ interface Props {
   params: Promise<{ state: string; place: string; service: string }>;
 }
 
+const CONCEPT_MAP: Record<string, any> = {
+  dispatch: DispatchCommandPage,
+  credential: CredentialPremiumPage,
+  journey: GuidedJourneyPage,
+  hyperlocal: HyperlocalProofPage,
+  onethumb: OneThumbSpeedPage,
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, place, service: serviceSlug } = await params;
   const stateCode = state.toUpperCase();
   const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
   if (!loc || !svc) return { title: "Not Found" };
-  if (!(await isServiceAllowedForTier(svc.id, loc.tier))) return { title: "Not Found" };
+  const allowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
+  if (!allowed) return { title: "Not Found" };
 
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
   const description = `Need ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}? ${BRAND_NAME} provides 24/7 licensed service. Call ${PHONE_NUMBER} now.`.slice(0, 155);
@@ -138,7 +154,8 @@ export default async function ServicePage({ params }: Props) {
 
   const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
   if (!loc || !svc) notFound();
-  if (!(await isServiceAllowedForTier(svc.id, loc.tier))) notFound();
+  const allowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
+  if (!allowed) notFound();
 
   const [siblings, nearby] = await Promise.all([
     getSiblingServices(loc.id, svc.id, 5),
@@ -201,7 +218,8 @@ export default async function ServicePage({ params }: Props) {
     })),
   };
 
-  const SelectedConceptPage = (CONCEPTS as Record<string, any>)[ACTIVE_CONCEPT] || CONCEPTS.dispatch;
+  const SelectedConceptPage = CONCEPT_MAP[ACTIVE_CONCEPT] || DispatchCommandPage;
+  const activeTokens = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
   return (
     <>
@@ -223,6 +241,51 @@ export default async function ServicePage({ params }: Props) {
         licenseNo="State Licensed & Insured"
         brandName={BRAND_NAME}
       />
+
+      <section style={{ backgroundColor: activeTokens.palette.bg, padding: "48px 24px 60px", borderTop: `1px solid ${activeTokens.palette.line}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 36 }}>
+          <div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: activeTokens.palette.text, marginBottom: 16 }}>
+              Other {NICHE} Services in {loc.place_name}
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+              {siblings.map((s) => (
+                <li key={s.id}>
+                  <Link href={`/${stateCode.toLowerCase()}/${loc.place_slug}/${s.service_slug}`} style={{ color: activeTokens.palette.muted, textDecoration: "none", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: activeTokens.palette.accent }}>&rarr;</span>
+                    {s.service_name} in {loc.place_name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: activeTokens.palette.text, marginBottom: 16 }}>
+              Nearby Service Areas in {loc.state_name}
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+              {nearby.map((n) => (
+                <li key={n.id}>
+                  <Link href={`/${stateCode.toLowerCase()}/${n.place_slug}/${svc.service_slug}`} style={{ color: activeTokens.palette.muted, textDecoration: "none", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: activeTokens.palette.accent }}>&rarr;</span>
+                    {svc.service_name} in {n.place_name}, {stateCode}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: activeTokens.palette.text, marginBottom: 16 }}>
+              Service Navigation
+            </h3>
+            <nav style={{ fontSize: "0.85rem", color: activeTokens.palette.muted, display: "flex", flexDirection: "column", gap: 10 }}>
+              <Link href="/" style={{ color: activeTokens.palette.muted, textDecoration: "none" }}>&larr; Return to Home</Link>
+              <Link href={`/${stateCode.toLowerCase()}`} style={{ color: activeTokens.palette.muted, textDecoration: "none" }}>&larr; View all {loc.state_name} Cities</Link>
+              <Link href={`/${stateCode.toLowerCase()}/${loc.place_slug}`} style={{ color: activeTokens.palette.muted, textDecoration: "none" }}>&larr; All Services in {loc.place_name}</Link>
+            </nav>
+          </div>
+        </div>
+      </section>
 
       <Footer city={loc.place_name} stateCode={stateCode} placeSlug={loc.place_slug} />
     </>

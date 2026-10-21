@@ -1,10 +1,10 @@
-import { getLocationsByState, getAllServices, getStates } from "@/lib/data";
+import { getDripLocations, getDripServices, getDripStates } from "@/lib/data";
 import { SITE_URL } from "@/lib/config";
 
 const MAX_URLS = 50000;
 
 export async function generateStaticParams() {
-  const states = await getStates();
+  const states = await getDripStates();
   return states.map((s) => ({ state: s.state_code.toLowerCase() }));
 }
 
@@ -22,23 +22,21 @@ export async function GET(_req: Request, { params }: RouteProps) {
   const stateCode = match[1].toUpperCase();
   const page = match[2] ? parseInt(match[2], 10) : 1;
 
-  const [locations, allServices] = await Promise.all([
-    getLocationsByState(stateCode),
-    getAllServices(),
+  const [dripLocations, dripServices] = await Promise.all([
+    getDripLocations(),
+    getDripServices(),
   ]);
 
-  if (locations.length === 0) return new Response("Not Found", { status: 404 });
+  const stateLocations = dripLocations.filter((l) => l.state_code === stateCode);
+  if (stateLocations.length === 0) return new Response("Not Found", { status: 404 });
 
   const today = new Date().toISOString().split("T")[0];
   const allUrls: string[] = [];
 
-  for (const loc of locations) {
-    const total = allServices.length;
-    const limit = loc.tier === 1 ? total : loc.tier === 2 ? Math.ceil(total * 0.5) : Math.ceil(total * 0.17);
-    const services = allServices.slice(0, limit);
-    for (const svc of services) {
+  for (const loc of stateLocations) {
+    for (const svc of dripServices) {
       allUrls.push(
-        `  <url>\n    <loc>${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>`
+        `  <url>\n    <loc>${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
       );
     }
   }

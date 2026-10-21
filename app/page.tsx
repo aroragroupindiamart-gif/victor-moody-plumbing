@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFeaturedLocations, getAllServices } from "@/lib/data";
-import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, NICHE_PLURAL, SCHEMA_TYPE, SITE_URL, CONTENT_SALT } from "@/lib/config";
+import {
+  BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, NICHE_PLURAL,
+  SCHEMA_TYPE, SITE_URL, CONTENT_SALT, ACTIVE_CONCEPT,
+} from "@/lib/config";
 import Footer from "@/components/Footer";
+import { tokens } from "@/lib/tokens";
 
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
@@ -13,6 +17,8 @@ export default async function HomePage() {
   const featuredCities = await getFeaturedLocations(CONTENT_SALT, 16);
   const allServices = await getAllServices();
   const topServices = allServices.slice(0, 6);
+
+  const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
   const orgJsonLd = {
     "@context": "https://schema.org",
@@ -37,62 +43,136 @@ export default async function HomePage() {
   };
 
   return (
-    <>
+    <div style={{ backgroundColor: t.palette.bg, color: t.palette.text, fontFamily: t.font, minHeight: "100vh" }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
 
-      <div className="announcement-bar" style={{ textAlign: "center", padding: "10px 24px", fontSize: "0.85rem", color: "#94a3b8", paddingTop: 80 }}>
-        <span style={{ color: "#f97316", fontWeight: 700 }}>24/7 EMERGENCY DISPATCH</span>
+      {/* Announcement Bar */}
+      <div
+        style={{
+          textAlign: "center",
+          padding: "12px 24px",
+          fontSize: "0.85rem",
+          color: t.palette.muted,
+          paddingTop: 80,
+          borderBottom: `1px solid ${t.palette.line}`,
+          backgroundColor: t.palette.surface,
+        }}
+      >
+        <span style={{ color: t.palette.accent, fontWeight: 800, letterSpacing: "0.08em" }}>
+          ● 24/7 LIVE DISPATCH ACTIVE
+        </span>
         {" "}&mdash;{" "}
-        Licensed &amp; Insured Technicians on Standby &mdash; Call{" "}
-        <a href={`tel:${PHONE_TEL}`} style={{ color: "white", fontWeight: 700 }}>{PHONE_NUMBER}</a>
+        Licensed &amp; Insured Technicians On Standby Across US Metros &mdash;{" "}
+        <a href={`tel:${PHONE_TEL}`} style={{ color: t.palette.text, fontWeight: 800, textDecoration: "none" }}>
+          Call {PHONE_NUMBER}
+        </a>
       </div>
 
-      <section className="hero-gradient" style={{ padding: "80px 24px 60px", textAlign: "center" }}>
+      {/* Hero Section */}
+      <section style={{ padding: "80px 24px 60px", textAlign: "center" }}>
         <div style={{ maxWidth: 850, margin: "0 auto" }}>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.15em", color: "#f97316", marginBottom: 16 }}>
-            TRUSTED 24/7 {NICHE.toUpperCase()} SERVICES
+          <div
+            style={{
+              fontSize: "0.8rem",
+              fontWeight: 800,
+              letterSpacing: "0.18em",
+              color: t.palette.accent,
+              marginBottom: 16,
+              textTransform: "uppercase",
+            }}
+          >
+            TRUSTED 24/7 {NICHE.toUpperCase()} NETWORK
           </div>
-          <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.8rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: 20, color: "white" }}>
+          <h1
+            style={{
+              fontSize: "clamp(2.3rem, 5.5vw, 4rem)",
+              fontWeight: 900,
+              lineHeight: 1.05,
+              marginBottom: 20,
+              color: t.palette.text,
+              letterSpacing: "-0.02em",
+            }}
+          >
             Emergency {NICHE} Dispatch Near You
           </h1>
-          <p style={{ fontSize: "1.15rem", color: "#94a3b8", marginBottom: 36, lineHeight: 1.7, maxWidth: 680, margin: "0 auto 36px" }}>
-            {BRAND_NAME} connects homeowners with licensed, vetted local {NICHE_PLURAL.toLowerCase()}. Upfront pricing, fast on-site arrival, and zero after-hours fees.
+          <p
+            style={{
+              fontSize: "1.15rem",
+              color: t.palette.muted,
+              marginBottom: 36,
+              lineHeight: 1.7,
+              maxWidth: 680,
+              margin: "0 auto 36px",
+            }}
+          >
+            {BRAND_NAME} connects homeowners and property managers with verified local {NICHE_PLURAL.toLowerCase()}.
+            Upfront flat-rate pricing, 30&ndash;45 minute on-site arrival, and zero after-hours fees.
           </p>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 40 }}>
-            <a href={`tel:${PHONE_TEL}`} className="btn-primary" style={{ fontSize: "1.15rem", padding: "18px 40px", borderRadius: 12 }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 36 }}>
+            <a
+              href={`tel:${PHONE_TEL}`}
+              style={{
+                backgroundColor: t.palette.accent,
+                color: t.palette.accentText || "#ffffff",
+                fontSize: "1.15rem",
+                fontWeight: 800,
+                padding: "18px 42px",
+                borderRadius: t.cta?.radius?.includes("full") ? 9999 : 14,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              }}
+            >
               ☎ Call {PHONE_NUMBER}
             </a>
-            <a href="#hubs" className="btn-secondary" style={{ fontSize: "1.1rem", padding: "18px 32px", borderRadius: 12 }}>
+            <a
+              href="#hubs"
+              style={{
+                backgroundColor: t.palette.surface,
+                color: t.palette.text,
+                border: `1px solid ${t.palette.line}`,
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                padding: "18px 32px",
+                borderRadius: t.cta?.radius?.includes("full") ? 9999 : 14,
+                textDecoration: "none",
+              }}
+            >
               View Active Coverage Hubs ↓
             </a>
           </div>
 
-          <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap", fontSize: "0.9rem", color: "#cbd5e1" }}>
-            <span>✓ Licensed &amp; Insured</span>
+          <div style={{ display: "flex", gap: 24, justifyContent: "center", flexWrap: "wrap", fontSize: "0.9rem", color: t.palette.muted, fontWeight: 600 }}>
+            <span>✓ Verified State Licensed</span>
             <span>✓ Upfront Pricing Guarantee</span>
             <span>✓ 30&ndash;45 Min Average Response</span>
           </div>
         </div>
       </section>
 
-      <section style={{ backgroundColor: "#0d1526", padding: "50px 24px", borderTop: "1px solid #1e293b", borderBottom: "1px solid #1e293b" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, marginBottom: 36, color: "white" }}>
+      {/* 3-Step Process Band */}
+      <section style={{ backgroundColor: t.palette.surface, padding: "50px 24px", borderTop: `1px solid ${t.palette.line}`, borderBottom: `1px solid ${t.palette.line}` }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h2 style={{ textAlign: "center", fontSize: "1.6rem", fontWeight: 800, marginBottom: 36, color: t.palette.text }}>
             How Our Emergency Dispatch Works
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 32 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 32 }}>
             {[
-              { step: "01", title: "Call Our Dispatcher", desc: `Call ${PHONE_NUMBER}. A live dispatcher answers 24/7 — never an automated bot.` },
-              { step: "02", title: "Technician Dispatched", desc: "The closest available licensed technician rolls to your location with a fully stocked truck." },
-              { step: "03", title: "Fixed on the Spot", desc: "You approve a flat, upfront quote before work begins. Backed by our workmanship warranty." },
+              { step: "01", title: "Call Our Dispatch Center", desc: `Call ${PHONE_NUMBER}. A live local dispatcher answers 24/7 &mdash; never an overseas bot.` },
+              { step: "02", title: "Technician Dispatched", desc: "The closest available licensed technician rolls to your address with a fully equipped vehicle." },
+              { step: "03", title: "Approved & Fixed", desc: "You approve a written quote before any work starts. 100% satisfaction guaranteed." },
             ].map((item) => (
               <div key={item.step} style={{ display: "flex", gap: 16 }}>
-                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#f97316", lineHeight: 1, minWidth: 44 }}>{item.step}</div>
+                <div style={{ fontSize: "2.2rem", fontWeight: 900, color: t.palette.accent, lineHeight: 1, minWidth: 48 }}>
+                  {item.step}
+                </div>
                 <div>
-                  <div style={{ fontWeight: 700, color: "white", marginBottom: 6 }}>{item.title}</div>
-                  <div style={{ color: "#94a3b8", fontSize: "0.875rem", lineHeight: 1.6 }}>{item.desc}</div>
+                  <div style={{ fontWeight: 800, color: t.palette.text, marginBottom: 6, fontSize: "1.05rem" }}>{item.title}</div>
+                  <div style={{ color: t.palette.muted, fontSize: "0.875rem", lineHeight: 1.6 }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -100,18 +180,19 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Featured Coverage Hubs */}
       <section id="hubs" style={{ padding: "60px 24px 80px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
             <div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.15em", color: "#f97316", textTransform: "uppercase" }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.15em", color: t.palette.accent, textTransform: "uppercase" }}>
                 Active Service Hubs
               </div>
-              <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", marginTop: 4 }}>
+              <h2 style={{ fontSize: "1.9rem", fontWeight: 800, color: t.palette.text, marginTop: 4 }}>
                 Featured Regional Dispatch Locations
               </h2>
             </div>
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem", margin: 0 }}>
+            <p style={{ color: t.palette.muted, fontSize: "0.9rem", margin: 0 }}>
               Crews on standby across major metro areas &middot; 24/7 dispatch
             </p>
           </div>
@@ -121,19 +202,26 @@ export default async function HomePage() {
               <Link
                 key={city.id}
                 href={`/${city.state_code.toLowerCase()}/${city.place_slug}`}
-                className="state-card"
-                style={{ padding: "18px 20px" }}
+                style={{
+                  backgroundColor: t.palette.surface,
+                  border: `1px solid ${t.palette.line}`,
+                  borderRadius: 14,
+                  padding: "20px 22px",
+                  textDecoration: "none",
+                  display: "block",
+                  transition: "transform 0.15s, border-color 0.15s",
+                }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <div style={{ fontWeight: 800, color: "white", fontSize: "1.05rem" }}>
+                  <div style={{ fontWeight: 800, color: t.palette.text, fontSize: "1.05rem" }}>
                     {city.place_name}, {city.state_code}
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#22c55e", display: "inline-block" }} />
-                    Online
+                  <span style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#22c55e", display: "inline-block" }} />
+                    Live
                   </span>
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                <div style={{ fontSize: "0.825rem", color: t.palette.muted }}>
                   Emergency {NICHE} &middot; 24/7 Available
                 </div>
               </Link>
@@ -142,21 +230,41 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section style={{ backgroundColor: "#0b1220", padding: "60px 24px 80px", borderTop: "1px solid #1e293b" }}>
+      {/* Core Services Section */}
+      <section style={{ backgroundColor: t.palette.surface, padding: "60px 24px 80px", borderTop: `1px solid ${t.palette.line}` }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ textAlign: "center", fontSize: "1.6rem", fontWeight: 800, color: "white", marginBottom: 32 }}>
+          <h2 style={{ textAlign: "center", fontSize: "1.8rem", fontWeight: 800, color: t.palette.text, marginBottom: 36 }}>
             Emergency {NICHE} Services We Provide
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
             {topServices.map((svc) => (
-              <div key={svc.id} style={{ background: "#111c33", border: "1px solid #263453", borderRadius: 12, padding: "22px" }}>
-                <div style={{ color: "#f97316", fontWeight: 800, fontSize: "1.1rem", marginBottom: 8 }}>
+              <div
+                key={svc.id}
+                style={{
+                  backgroundColor: t.palette.bg,
+                  border: `1px solid ${t.palette.line}`,
+                  borderRadius: 14,
+                  padding: "24px",
+                }}
+              >
+                <div style={{ color: t.palette.accent, fontWeight: 800, fontSize: "1.15rem", marginBottom: 8 }}>
                   {svc.service_name}
                 </div>
-                <p style={{ color: "#cbd5e1", fontSize: "0.875rem", lineHeight: 1.6, margin: "0 0 16px" }}>
+                <p style={{ color: t.palette.muted, fontSize: "0.875rem", lineHeight: 1.6, margin: "0 0 16px" }}>
                   Fast local dispatch for residential and commercial {svc.service_name.toLowerCase()}. Upfront flat pricing on every job.
                 </p>
-                <a href={`tel:${PHONE_TEL}`} style={{ color: "white", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
+                <a
+                  href={`tel:${PHONE_TEL}`}
+                  style={{
+                    color: t.palette.text,
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
                   Call for Dispatch &rarr;
                 </a>
               </div>
@@ -165,24 +273,35 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section style={{ backgroundColor: "#f97316", padding: "48px 24px", textAlign: "center" }}>
+      {/* Bottom CTA Banner */}
+      <section style={{ backgroundColor: t.palette.accent, padding: "50px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", marginBottom: 12 }}>
-            Need An Emergency Plumber Right Now?
+          <h2 style={{ fontSize: "2rem", fontWeight: 900, color: t.palette.accentText || "#ffffff", marginBottom: 12 }}>
+            Need A Licensed Plumber Right Now?
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.85)", marginBottom: 24, fontSize: "1rem" }}>
-            Our network of licensed professionals is available 24/7, 365 days a year.
+          <p style={{ color: t.palette.accentText || "#ffffff", opacity: 0.9, marginBottom: 28, fontSize: "1.05rem" }}>
+            Our verified local technicians are on standby 24/7 across US metros.
           </p>
           <a
             href={`tel:${PHONE_TEL}`}
-            style={{ backgroundColor: "white", color: "#f97316", fontWeight: 800, padding: "16px 40px", borderRadius: 10, textDecoration: "none", fontSize: "1.15rem", display: "inline-block" }}
+            style={{
+              backgroundColor: t.palette.surface || "#ffffff",
+              color: t.palette.text,
+              fontWeight: 800,
+              padding: "18px 44px",
+              borderRadius: t.cta?.radius?.includes("full") ? 9999 : 12,
+              textDecoration: "none",
+              fontSize: "1.15rem",
+              display: "inline-block",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            }}
           >
-            {PHONE_NUMBER}
+            Call {PHONE_NUMBER}
           </a>
         </div>
       </section>
 
       <Footer />
-    </>
+    </div>
   );
 }

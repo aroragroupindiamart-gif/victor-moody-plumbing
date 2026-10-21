@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE } from "@/lib/config";
+import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, ACTIVE_CONCEPT } from "@/lib/config";
+import { tokens } from "@/lib/tokens";
 
 function slugToTitle(s: string): string {
   return s.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -20,6 +21,11 @@ export default function StickyNav() {
 
   const parts = pathname.split("/").filter(Boolean);
 
+  // Leaf service pages already render Muse's dedicated concept top bar
+  if (parts.length >= 3) return null;
+
+  const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
+
   let contextLabel: string | null = null;
   let stateSlug: string | null = null;
   let citySlug:  string | null = null;
@@ -33,13 +39,7 @@ export default function StickyNav() {
   }
 
   const navLinks: { label: string; href: string }[] =
-    parts.length >= 3 && stateSlug && citySlug
-      ? [
-          { label: slugToTitle(citySlug), href: `/${stateSlug}/${citySlug}` },
-          { label: stateSlug.toUpperCase(), href: `/${stateSlug}` },
-          { label: "All States", href: "/" },
-        ]
-      : parts.length >= 2 && stateSlug && citySlug
+    parts.length >= 2 && stateSlug && citySlug
       ? [
           { label: stateSlug.toUpperCase(), href: `/${stateSlug}` },
           { label: "All States", href: "/" },
@@ -55,12 +55,13 @@ export default function StickyNav() {
     <nav
       style={{
         position: "fixed",
-        top: 0, left: 0, right: 0,
+        top: 0,
+        left: 0,
+        right: 0,
         zIndex: 50,
-        backgroundColor: scrolled ? "rgba(10,15,30,0.97)" : "rgba(10,15,30,0.85)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
-        backdropFilter: "blur(10px)",
-        boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.05)" : "none",
+        backgroundColor: scrolled ? t.palette.surface : t.palette.bg,
+        borderBottom: `1px solid ${t.palette.line}`,
+        boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.15)" : "none",
         transition: "background-color 0.2s, box-shadow 0.2s",
       }}
     >
@@ -76,10 +77,10 @@ export default function StickyNav() {
           gap: 16,
         }}
       >
-        <Link href="/" style={{ color: "white", textDecoration: "none", fontWeight: 700, fontSize: "1.1rem", whiteSpace: "nowrap" }}>
+        <Link href="/" style={{ color: t.palette.text, textDecoration: "none", fontWeight: 800, fontSize: "1.15rem", whiteSpace: "nowrap" }}>
           {BRAND_NAME}
           {contextLabel && (
-            <span className="nav-context-label" style={{ color: "#94a3b8", fontWeight: 400, fontSize: "0.85rem", marginLeft: 8 }}>
+            <span className="nav-context-label" style={{ color: t.palette.muted, fontWeight: 400, fontSize: "0.85rem", marginLeft: 8 }}>
               — {contextLabel}
             </span>
           )}
@@ -87,7 +88,7 @@ export default function StickyNav() {
 
         <div style={{ display: "flex", gap: 24, fontSize: "0.85rem" }} className="nav-links">
           {navLinks.map((link) => (
-            <Link key={link.href + link.label} href={link.href} style={{ color: "#94a3b8", textDecoration: "none" }}>
+            <Link key={link.href + link.label} href={link.href} style={{ color: t.palette.muted, textDecoration: "none", fontWeight: 600 }}>
               {link.label}
             </Link>
           ))}
@@ -97,11 +98,11 @@ export default function StickyNav() {
           href={`tel:${PHONE_TEL}`}
           className="nav-phone-btn"
           style={{
-            backgroundColor: "#f97316",
-            color: "white",
-            fontWeight: 700,
-            padding: "9px 18px",
-            borderRadius: 6,
+            backgroundColor: t.palette.accent,
+            color: t.palette.accentText || "#ffffff",
+            fontWeight: 800,
+            padding: "10px 20px",
+            borderRadius: t.cta?.radius ? (t.cta.radius.includes("full") ? 9999 : 12) : 10,
             textDecoration: "none",
             fontSize: "0.9rem",
             whiteSpace: "nowrap",
