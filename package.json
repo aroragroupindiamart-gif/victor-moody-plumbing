@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p ${PORT:-3000} -H 0.0.0.0",
     "build": "next build",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion",
     "deploy": "wrangler deploy",
     "start": "next start -p ${PORT:-3000}",
     "typecheck": "tsc -p tsconfig.json --noEmit"
