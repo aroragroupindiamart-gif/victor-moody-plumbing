@@ -19,8 +19,8 @@ import {
   GuidedJourneyPage,
   HyperlocalProofPage,
   OneThumbSpeedPage,
-  tokens,
 } from "@/components/landing-components";
+import { tokens } from "@/lib/tokens";
 
 export const revalidate = 2592000; // 30 days
 export const dynamicParams = true;
