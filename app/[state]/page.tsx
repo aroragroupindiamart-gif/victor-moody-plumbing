@@ -3,13 +3,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import {
   getStates, getStateByCode, getLocationsByState,
-  getDripLocationsByState,
+  getDripLocationsByState, getDripLocations,
 } from "@/lib/data";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, SITE_URL, NICHE, NICHE_PLURAL,
   SCHEMA_TYPE, ACTIVE_CONCEPT,
 } from "@/lib/config";
 import Footer from "@/components/Footer";
+import HubTemplate from "@/components/HubTemplate";
+import { getAuthorityHub, AUTHORITY_HUBS } from "@/lib/hubs";
 import { tokens } from "@/lib/tokens";
 
 export const revalidate = 2592000; // 30 days edge cache
@@ -21,6 +23,24 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state } = await params;
+
+  // 1. Check if authority hub
+  const hub = getAuthorityHub(state);
+  if (hub) {
+    const canonicalUrl = `${SITE_URL}/${hub.slug}`;
+    return {
+      title: `${hub.metaTitle} | ${BRAND_NAME}`,
+      description: hub.metaDescription,
+      alternates: { canonical: canonicalUrl },
+      openGraph: {
+        title: `${hub.metaTitle} | ${BRAND_NAME}`,
+        description: hub.metaDescription,
+        url: canonicalUrl,
+      },
+    };
+  }
+
+  // 2. Check if state code
   const stateCode = state.toUpperCase();
   const stateRow = await getStateByCode(stateCode);
   if (!stateRow) return { title: "Not Found" };
@@ -33,8 +53,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function StatePage({ params }: Props) {
+export default async function StateOrHubPage({ params }: Props) {
   const { state } = await params;
+
+  // 1. Check if authority hub
+  const hub = getAuthorityHub(state);
+  if (hub) {
+    const dripLocations = await getDripLocations();
+    return <HubTemplate hub={hub} locations={dripLocations} />;
+  }
+
+  // 2. Check if state code
   const stateCode = state.toUpperCase();
   const [stateRow, drippedLocations, allStateLocations] = await Promise.all([
     getStateByCode(stateCode),
