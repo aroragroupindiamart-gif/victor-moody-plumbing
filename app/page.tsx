@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFeaturedLocations, getDripServices } from "@/lib/data";
+import { AUTHORITY_HUBS } from "@/lib/hubs";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, NICHE_PLURAL,
   SCHEMA_TYPE, SITE_URL, CONTENT_SALT, ACTIVE_CONCEPT,
@@ -224,6 +225,59 @@ export default async function HomePage() {
                 </div>
                 <div style={{ fontSize: "0.825rem", color: t.palette.muted }}>
                   Emergency {NICHE} &middot; 24/7 Available
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Core Authority & Diagnostic Hubs */}
+      <section style={{ backgroundColor: t.palette.bg, padding: "60px 24px", borderTop: `1px solid ${t.palette.line}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.15em", color: t.palette.accent, textTransform: "uppercase" }}>
+              Technical Diagnostic Guides
+            </div>
+            <h2 style={{ fontSize: "2rem", fontWeight: 900, color: t.palette.text, marginTop: 6, marginBottom: 12 }}>
+              Plumbing Infrastructure &amp; Code Compliance Hubs
+            </h2>
+            <p style={{ color: t.palette.muted, fontSize: "0.95rem", maxWidth: 650, margin: "0 auto" }}>
+              In-depth diagnostic trees, municipal compliance standards, and contractor procedures for high-priority plumbing failures.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 18 }}>
+            {AUTHORITY_HUBS.map((hub) => (
+              <Link
+                key={hub.slug}
+                href={`/${hub.slug}`}
+                style={{
+                  backgroundColor: t.palette.surface,
+                  border: `1px solid ${t.palette.line}`,
+                  borderRadius: 14,
+                  padding: "24px",
+                  textDecoration: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  transition: "transform 0.15s, border-color 0.15s",
+                }}
+              >
+                <div>
+                  <div style={{ display: "inline-block", fontSize: "0.75rem", fontWeight: 800, color: t.palette.accent, backgroundColor: "rgba(37, 99, 235, 0.1)", padding: "4px 10px", borderRadius: 9999, marginBottom: 10 }}>
+                    {hub.badge}
+                  </div>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: t.palette.text, margin: "0 0 8px", lineHeight: 1.35 }}>
+                    {hub.title}
+                  </h3>
+                  <p style={{ color: t.palette.muted, fontSize: "0.85rem", lineHeight: 1.6, margin: "0 0 16px" }}>
+                    {hub.summary.slice(0, 130)}...
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem", fontWeight: 700, color: t.palette.accent }}>
+                  <span>Explore Diagnostic Guide</span>
+                  <span>&rarr;</span>
                 </div>
               </Link>
             ))}
