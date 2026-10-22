@@ -19,7 +19,7 @@ export default function StickyNav() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const parts = pathname.split("/").filter(Boolean);
+  const parts = (pathname || "").split("/").filter(Boolean);
 
   // Leaf service pages already render Muse's dedicated concept top bar
   if (parts.length >= 3) return null;

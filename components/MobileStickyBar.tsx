@@ -11,7 +11,7 @@ export default function MobileStickyBar({
   phoneTel: string;
 }) {
   const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
+  const parts = (pathname || "").split("/").filter(Boolean);
 
   // Leaf service pages already render Muse's dedicated concept sticky call bar
   if (parts.length >= 3) return null;

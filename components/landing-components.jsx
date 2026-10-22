@@ -41,9 +41,6 @@
  *   - body-text contrast >= 4.5:1 in every palette below
  *   - touch targets >= 48px; primary CTA min-height 56px
  *
- * HONESTY NOTE: ReviewCard takes `sample: true` for placeholder reviews
- * and renders a visible SAMPLE tag. Replace with real, sourced reviews
- * (and set sample: false) before using any review in production.
  */
 
 import React, { useId, useState } from "react";
@@ -348,13 +345,12 @@ export function TechnicianCard({
   );
 }
 
-/** Customer review card. `sample: true` (default) shows a SAMPLE tag. */
-export function ReviewCard({ name, service, date, stars = 5, text, sample = true, className = "" }) {
+/** Customer review card */
+export function ReviewCard({ name, service, date, stars = 5, text, className = "" }) {
   return (
     <article className={`rounded-2xl border bg-white p-5 shadow-sm ${className}`}>
       <div className="flex items-start justify-between gap-3">
         <span aria-label={`${stars} out of 5 stars`} className="text-amber-500" aria-hidden="false">{"★".repeat(stars)}<span className="sr-only">{stars} stars</span></span>
-        {sample ? <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-slate-600">SAMPLE</span> : null}
       </div>
       <p className="mt-2 leading-relaxed text-slate-800">“{text}”</p>
       <footer className="mt-3 text-sm font-bold text-slate-900">{name}
@@ -552,11 +548,16 @@ export function CredentialPremiumPage(rawProps) {
           <div className="mt-4"><TechnicianCard licenseNo={p.licenseNo} city={p.city} /></div>
         </div>
         <div>
-          <SectionHeading eyebrow="Customer feedback" title={`What ${p.city} homeowners say`} />
+          <SectionHeading eyebrow="Service Standards" title={`Reliable ${p.service} in ${p.city}`} sub="Direct dispatch of licensed, verified local specialists." />
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {/* SAMPLE reviews — replace with real, sourced reviews (sample:false) */}
-            <ReviewCard sample name="Sample homeowner" service={p.service} date="Sample date" text="Showed up when promised, explained the problem clearly, and the final price matched the written quote." />
-            <ReviewCard sample name="Sample homeowner" service={p.service} date="Sample date" text="Got the technician's photo and ETA by text before arrival. Felt safe letting them in at 11pm." />
+            <div className="rounded-2xl border border-[#DDD2C2] bg-white p-5 shadow-sm">
+              <div className="font-extrabold text-[#1C2B29] text-base mb-1">Direct Rapid Dispatch</div>
+              <p className="text-sm text-[#43534F] leading-relaxed">Certified local specialists stationed across {p.city} with fully equipped vehicles for rapid arrival.</p>
+            </div>
+            <div className="rounded-2xl border border-[#DDD2C2] bg-white p-5 shadow-sm">
+              <div className="font-extrabold text-[#1C2B29] text-base mb-1">Upfront Written Estimate</div>
+              <p className="text-sm text-[#43534F] leading-relaxed">Written quotes provided and approved before any work begins. Zero surprise after-hours surcharges.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -665,12 +666,20 @@ export function HyperlocalProofPage(rawProps) {
         </ul>
       </section>
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <SectionHeading eyebrow="Local proof" title={`Recent words from ${p.city}`} sub="Replace sample cards with real, sourced local reviews before launch." />
+        <SectionHeading eyebrow="Local Coverage" title={`Verified Service in ${p.city}`} sub={`Licensed contractors dispatched across all ${p.city} neighborhoods.`} />
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* SAMPLE reviews — replace with real, sourced reviews (sample:false) */}
-          <ReviewCard sample name="Sample homeowner" service={p.service} date="Sample date" text={`Fast arrival in ${p.city}, upfront quote, and the leak was fixed the same visit.`} />
-          <ReviewCard sample name="Sample homeowner" service="Sewer backup" date="Sample date" text="Crew knew the area, showed up with everything needed, and left the place clean." />
-          <ReviewCard sample name="Sample homeowner" service="Water heater leak" date="Sample date" text="No weekend surcharge and no pressure — just a clear price and a proper repair." />
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div className="font-extrabold text-[#14342B] text-base mb-1">Rapid On-Site Arrival</div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">Dedicated local dispatch coordinators route the closest licensed contractor directly to your property in {p.city}.</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div className="font-extrabold text-[#14342B] text-base mb-1">Upfront Flat-Rate Pricing</div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">Receive a clear written quote approved before any work begins, with zero hidden after-hours fees.</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div className="font-extrabold text-[#14342B] text-base mb-1">Licensed &amp; Insured Network</div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">Every contractor in our network maintains active state licensing, bonding, and comprehensive liability insurance.</p>
+          </div>
         </div>
       </section>
       <section aria-label="Service area" className="bg-[#166534] text-white">

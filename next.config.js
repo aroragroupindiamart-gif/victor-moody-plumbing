@@ -55,7 +55,17 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/pressure-reducing-valve-replacement",
+        destination: "/high-water-pressure-pressure-reducing-valve",
+        permanent: true,
+      },
+      {
         source: "/backflow-preventer",
+        destination: "/backflow-preventer-repair-installation",
+        permanent: true,
+      },
+      {
+        source: "/backflow-preventer-installation",
         destination: "/backflow-preventer-repair-installation",
         permanent: true,
       },
@@ -84,17 +94,10 @@ const nextConfig = {
         destination: "/cast-iron-galvanized-pipe-replacement",
         permanent: true,
       },
-    ];
-  },
-  async rewrites() {
-    return [
       {
-        source: "/sitemap/:state(\\w+(?:-\\d+)?)\\.xml",
-        destination: "/sitemap/:state",
-      },
-      {
-        source: "/:state([a-z]{2}(?:-\\d+)?)\\.xml",
-        destination: "/sitemap/:state",
+        source: "/sitemap/:path*",
+        destination: "/sitemap.xml",
+        permanent: true,
       },
     ];
   },
