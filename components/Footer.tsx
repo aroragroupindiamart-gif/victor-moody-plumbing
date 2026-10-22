@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, ACTIVE_CONCEPT } from "@/lib/config";
-import { getAllServices } from "@/lib/data";
+import { getDripServices } from "@/lib/data";
 import { tokens } from "@/lib/tokens";
 
 export default async function Footer({
@@ -12,8 +12,7 @@ export default async function Footer({
   stateCode?: string;
   placeSlug?: string;
 }) {
-  const allServices = await getAllServices();
-  const footerServices = allServices.slice(0, 5);
+  const footerServices = await getDripServices();
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
   const location = city && stateCode ? `${city}, ${stateCode}` : "Nationwide";
