@@ -62,13 +62,13 @@ export async function getAllLocations(): Promise<Location[]> {
 }
 
 export async function getAllServices(): Promise<Service[]> {
-  return ALL_SERVICES;
+  return getDripServices();
 }
 
 export async function getStates(): Promise<StateRow[]> {
   const map = new Map<string, StateRow>();
   for (const loc of ALL_LOCATIONS) {
-    const pages = ALL_SERVICES.length;
+    const pages = ROUTE3_MAX_SERVICES;
     const entry = map.get(loc.state_code);
     if (entry) {
       entry.location_count++;
@@ -88,12 +88,12 @@ export async function getStates(): Promise<StateRow[]> {
 }
 
 export async function getFeaturedLocations(salt = 0, count = 16): Promise<Location[]> {
-  const topMetros = POPULATION_SORTED_LOCATIONS.filter((l) => l.population >= 100000);
-  if (topMetros.length === 0) return ALL_LOCATIONS.slice(0, count);
+  const dripLocs = await getDripLocations();
+  if (dripLocs.length <= count) return dripLocs;
 
-  const maxOffset = Math.max(1, topMetros.length - count);
+  const maxOffset = Math.max(1, dripLocs.length - count);
   const offset = Math.abs(salt * 7) % maxOffset;
-  return topMetros.slice(offset, offset + count);
+  return dripLocs.slice(offset, offset + count);
 }
 
 export async function getStateByCode(stateCode: string): Promise<StateRow | null> {
@@ -120,13 +120,11 @@ export async function getService(serviceSlug: string): Promise<Service | null> {
 }
 
 export async function getServicesByLocationTier(_tier: number): Promise<Service[]> {
-  return ALL_SERVICES;
+  return getDripServices();
 }
 
-export async function getServicesByLocation(locationId: number): Promise<Service[]> {
-  const loc = locationById.get(locationId);
-  if (!loc) return [];
-  return ALL_SERVICES;
+export async function getServicesByLocation(_locationId: number): Promise<Service[]> {
+  return getDripServices();
 }
 
 export async function isServiceAllowedForTier(_serviceId: number, _locationTier: number): Promise<boolean> {
@@ -136,11 +134,9 @@ export async function isServiceAllowedForTier(_serviceId: number, _locationTier:
 export async function getSiblingServices(locationId: number, serviceId: number, limit = 5): Promise<Service[]> {
   const loc = locationById.get(locationId);
   if (!loc) return [];
-  const pool = ALL_SERVICES.filter((s) => s.id !== serviceId);
-  return pool
-    .slice()
-    .sort((a, b) => shuffleKey(a.id, locationId) - shuffleKey(b.id, locationId))
-    .slice(0, limit);
+  const dripSvcs = await getDripServices();
+  const pool = dripSvcs.filter((s) => s.id !== serviceId);
+  return pool.slice(0, limit);
 }
 
 export async function getNearbyLocations(locationId: number, stateCode: string, limit = 3): Promise<Location[]> {
@@ -152,28 +148,39 @@ export async function getNearbyLocations(locationId: number, stateCode: string, 
 }
 
 /* ================================================================
- * POPULATION-PRIORITY DRIP ENGINE (500 URLs / Day Natural Growth)
+ * ROUTE 3 HYBRID PLAN: STRICT 21-DAY DRIP ENGINE (~650-700 URL CEILING)
  * ================================================================ */
+
+export const ROUTE3_MAX_CITIES = 200; // Hard ceiling: Top 200 US Metros only
+export const ROUTE3_MAX_SERVICES = 3;  // Hard ceiling: 3 Core Infrastructure Services only
+
+// Route 3 Core Target Verticals
+export const ROUTE3_SERVICE_SLUGS = [
+  "water-pressure-problems",       // 1. Water Pressure Diagnostics & PRVs
+  "backflow-preventer-testing",    // 2. Municipal Backflow Testing & Prevention
+  "pipe-replacement",             // 3. Whole-Home Repiping
+];
 
 export function getDripLocationsCount(): number {
   const envCount = process.env.NEXT_PUBLIC_DRIP_COUNT;
   if (envCount && !isNaN(Number(envCount))) {
-    return Math.min(Number(envCount), POPULATION_SORTED_LOCATIONS.length);
+    return Math.min(Number(envCount), ROUTE3_MAX_CITIES);
   }
   const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE || new Date().toISOString().split("T")[0];
   const launch = new Date(launchStr).getTime();
   const now = Date.now();
   const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
 
-  // Day 0/1: Top 60 cities (includes Anaheim & all Tier-1 metros). Each day expands by 50 cities (~500 URLs/day)
-  const allowed = 60 + daysElapsed * 50;
-  return Math.min(allowed, POPULATION_SORTED_LOCATIONS.length);
+  // Day 1: 12 Wave-1 cities (12 * 3 = 36 landing pages + hubs = ~45-50 URLs)
+  // Day 7: ~66 cities (~200 landing pages)
+  // Day 14: ~130 cities (~400 landing pages)
+  // Day 21+: 200 cities max (200 * 3 = 600 landing pages + hubs = ~650-700 URLs Lifetime Ceiling)
+  const allowed = Math.min(12 + daysElapsed * 9, ROUTE3_MAX_CITIES);
+  return allowed;
 }
 
-export function getDripServicesCount(daysElapsed = 0): number {
-  if (daysElapsed < 14) return 10;   // Weeks 1-2: Core 10 high-intent services
-  if (daysElapsed < 30) return 25;   // Weeks 3-4: Top 25 services
-  return ALL_SERVICES.length;        // Day 30+: All 150 services
+export function getDripServicesCount(_daysElapsed = 0): number {
+  return ROUTE3_MAX_SERVICES;
 }
 
 export async function getDripLocations(): Promise<Location[]> {
@@ -182,14 +189,14 @@ export async function getDripLocations(): Promise<Location[]> {
 }
 
 export async function getDripServices(): Promise<Service[]> {
-  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE;
-  let daysElapsed = 0;
-  if (launchStr) {
-    const launch = new Date(launchStr).getTime();
-    daysElapsed = Math.max(0, Math.floor((Date.now() - launch) / (1000 * 60 * 60 * 24)));
+  const selected = ROUTE3_SERVICE_SLUGS
+    .map((slug) => serviceBySlug.get(slug))
+    .filter((s): s is Service => Boolean(s));
+
+  if (selected.length === 3) {
+    return selected;
   }
-  const count = getDripServicesCount(daysElapsed);
-  return ALL_SERVICES.slice(0, count);
+  return ALL_SERVICES.slice(0, ROUTE3_MAX_SERVICES);
 }
 
 export async function isLocationAllowed(stateCode: string, placeSlug: string): Promise<boolean> {
