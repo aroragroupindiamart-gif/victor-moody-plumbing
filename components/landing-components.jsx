@@ -299,7 +299,7 @@ export function TrustBadgeRow({ licenseNo = "", verifyHref = "", className = "" 
       </ul>
       {licenseNo ? (
         <p className="mt-2 text-xs font-semibold opacity-75">
-          Licence No. {licenseNo}
+          {licenseNo.startsWith("State") || licenseNo.startsWith("Verified") ? licenseNo : `Licence No. ${licenseNo}`}
           {verifyHref ? (
             <> · <a href={verifyHref} className={`underline underline-offset-2 ${focusRing}`}>Verify licence</a></>
           ) : null}
@@ -315,7 +315,7 @@ export function CredentialBand({ licenseNo = "", verifyHref = "", rating, review
     <section aria-label="Licensed, bonded and insured" className="border-y border-[#CBDCEC] bg-[#F1F6FB]">
       <div className="mx-auto grid max-w-6xl gap-4 px-4 py-5 sm:grid-cols-3">
         <div><p className="font-extrabold text-[#0F2A44]">Licensed, Bonded &amp; Insured</p>
-          <p className="text-sm text-[#3D5A76]">{licenseNo ? `Licence No. ${licenseNo}` : "Credentials shown on arrival & on your quote"}{verifyHref ? <> · <a className={`underline ${focusRing}`} href={verifyHref}>Verify</a></> : null}</p></div>
+          <p className="text-sm text-[#3D5A76]">{licenseNo ? (licenseNo.startsWith("State") ? licenseNo : `Licence No. ${licenseNo}`) : "Credentials shown on arrival & on your quote"}{verifyHref ? <> · <a className={`underline ${focusRing}`} href={verifyHref}>Verify</a></> : null}</p></div>
         <div><p className="font-extrabold text-[#0F2A44]">Upfront Pricing Guarantee</p>
           <p className="text-sm text-[#3D5A76]">Written quote before work starts. The price agreed is the price you pay.</p></div>
         <div><p className="font-extrabold text-[#0F2A44]">Zero Hidden Fees</p>
@@ -340,7 +340,7 @@ export function TechnicianCard({
         <h3 className="text-base font-extrabold text-[#0F2A44]">{name}</h3>
         <ul className="mt-1 space-y-1 font-semibold text-[#3D5A76]">
           <li>✓ Background-checked &amp; ID-verified</li>
-          <li>✓ Licensed{licenseNo ? ` — No. ${licenseNo}` : ""} · Serving {city}</li>
+          <li>✓ Licensed{licenseNo ? (licenseNo.startsWith("State") ? ` (${licenseNo})` : ` — No. ${licenseNo}`) : ""} · Serving {city}</li>
           <li>✓ You get their photo &amp; ETA by text before arrival</li>
         </ul>
       </div>
@@ -498,7 +498,7 @@ export function DispatchCommandPage(rawProps) {
       <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         {[["24/7 Service", "Around the clock — no extra charge for nights or weekends."],
           ["Rapid Response", `Most ${p.city} calls dispatched within the hour.`],
-          [`${p.city}-Wide`, `All neighbourhoods across ${p.city} and surrounding areas.`],
+          [`${p.city}-Wide`, `All neighborhoods across ${p.city} and surrounding areas.`],
           ["Licensed & Insured", "Licensed, bonded, with comprehensive liability insurance."]
         ].map(([h, d]) => (
           <article key={h} className="rounded-2xl p-5" style={{ backgroundColor: t.palette.surface }}>
@@ -635,15 +635,15 @@ export function GuidedJourneyPage(rawProps) {
 /* ================================================================
  * 6. CONCEPT 4 — HYPERLOCAL PROOF
  * Locality-first. City-forward hero, deep green + cream.
- * Pass `neighbourhoods` (real areas you serve) + local reviews via props.
- * Structure: city hero → neighbourhood chips → local reviews →
+ * Pass `neighborhoods` (real areas you serve) + local reviews via props.
+ * Structure: city hero → neighborhood chips → local reviews →
  *            service-area strip → triage → FAQ (3) → final CTA
  * ================================================================ */
 export function HyperlocalProofPage(rawProps) {
   const p = withDefaults(rawProps);
   const t = tokens.hyperlocal;
-  // Placeholder chips — replace with the real neighbourhoods for this city.
-  const neighbourhoods = rawProps.neighbourhoods || [`Downtown ${p.city}`, `Greater ${p.city}`, `${p.city} surrounding areas`];
+  // Placeholder chips — replace with the real neighborhoods for this city.
+  const neighborhoods = rawProps.neighborhoods || [`Downtown ${p.city}`, `Greater ${p.city}`, `${p.city} surrounding areas`];
   return (
     <main style={{ fontFamily: t.font, backgroundColor: t.palette.bg, color: t.palette.text }} className="min-h-screen pb-24 sm:pb-0">
       <DispatchTopBar {...p} />
@@ -653,7 +653,7 @@ export function HyperlocalProofPage(rawProps) {
           Your {p.city} {p.service.toLowerCase()}.
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#3E5A50]">
-          Serving all of {p.city} — every neighbourhood, around the clock. Licensed plumbers who know {p.city} homes, priced upfront.
+          Serving all of {p.city} — every neighborhood, around the clock. Licensed plumbers who know {p.city} homes, priced upfront.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <TapToCallButton {...p} style={{ backgroundColor: t.palette.accent, color: "#fff" }} className={t.cta.radius} sublabel={`Local dispatch in ${p.city}`} dark />
@@ -661,7 +661,7 @@ export function HyperlocalProofPage(rawProps) {
           <ResponseTimeIndicator responseTime={p.responseTime} className="border-[#E0D3B4] bg-white" />
         </div>
         <ul className="mt-7 flex flex-wrap gap-2" aria-label={`Areas served in ${p.city}`}>
-          {neighbourhoods.map((n) => <li key={n} className="inline-flex min-h-[48px] items-center rounded-full bg-white px-4 py-2 text-sm font-bold shadow-sm">📍 {n}</li>)}
+          {neighborhoods.map((n) => <li key={n} className="inline-flex min-h-[48px] items-center rounded-full bg-white px-4 py-2 text-sm font-bold shadow-sm">📍 {n}</li>)}
         </ul>
       </section>
       <section className="mx-auto max-w-6xl px-4 py-12">
