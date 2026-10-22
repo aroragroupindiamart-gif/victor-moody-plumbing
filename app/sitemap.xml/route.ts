@@ -1,36 +1,57 @@
-import { getDripStates } from "@/lib/data";
+import { getDripLocations, getDripServices } from "@/lib/data";
+import { AUTHORITY_HUBS } from "@/lib/hubs";
 import { SITE_URL } from "@/lib/config";
 
-const MAX_URLS = 50000;
+export const revalidate = 0; // Fresh on every request
 
 export async function GET() {
-  const states = await getDripStates();
+  const [dripLocations, dripServices] = await Promise.all([
+    getDripLocations(),
+    getDripServices(),
+  ]);
+
   const today = new Date().toISOString().split("T")[0];
+  const urls: string[] = [];
 
-  const entries: string[] = [
-    `  <sitemap>\n    <loc>${SITE_URL}/sitemap/main.xml</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`,
-  ];
+  // 1. Homepage (Priority 1.0)
+  urls.push(`  <url>
+    <loc>${SITE_URL}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>`);
 
-  for (const s of states) {
-    const sc = s.state_code.toLowerCase();
-    const totalFiles = Math.ceil(s.page_count / MAX_URLS) || 1;
-    for (let i = 1; i <= totalFiles; i++) {
-      const suffix = i === 1 ? "" : `-${i}`;
-      entries.push(
-        `  <sitemap>\n    <loc>${SITE_URL}/sitemap/${sc}${suffix}.xml</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
-      );
+  // 2. All Authority Diagnostic Hubs & Cost Guide (Priority 0.9)
+  for (const hub of AUTHORITY_HUBS) {
+    urls.push(`  <url>
+    <loc>${SITE_URL}/${hub.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`);
+  }
+
+  // 3. Active Wave-1 City Pages (Priority 0.8)
+  for (const loc of dripLocations) {
+    for (const svc of dripServices) {
+      urls.push(`  <url>
+    <loc>${SITE_URL}/${loc.state_code.toLowerCase()}/${loc.place_slug}/${svc.service_slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`);
     }
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.join("\n")}
-</sitemapindex>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join("\n")}
+</urlset>`;
 
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Cache-Control": "public, max-age=0, must-revalidate, no-cache",
     },
   });
 }

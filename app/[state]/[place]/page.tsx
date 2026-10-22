@@ -12,7 +12,7 @@ import {
 import Footer from "@/components/Footer";
 import { tokens } from "@/lib/tokens";
 
-export const revalidate = 2592000; // 30 days edge cache
+export const revalidate = 300; // 5 minutes edge revalidation
 export const dynamicParams = true;
 
 interface Props {

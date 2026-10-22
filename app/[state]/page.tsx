@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  getStates, getStateByCode, getLocationsByState,
+  getStateByCode,
   getDripLocationsByState, getDripLocations,
 } from "@/lib/data";
 import {
@@ -11,11 +11,24 @@ import {
 } from "@/lib/config";
 import Footer from "@/components/Footer";
 import HubTemplate from "@/components/HubTemplate";
-import { getAuthorityHub, AUTHORITY_HUBS } from "@/lib/hubs";
+import { getAuthorityHub } from "@/lib/hubs";
 import { tokens } from "@/lib/tokens";
 
-export const revalidate = 2592000; // 30 days edge cache
+export const revalidate = 300; // 5 minutes cache
 export const dynamicParams = true;
+
+const HUB_ALIASES: Record<string, string> = {
+  "cost-guide": "pipe-pressure-backflow-cost-guide",
+  "plumbing-cost-guide": "pipe-pressure-backflow-cost-guide",
+  "high-water-pressure": "high-water-pressure-pressure-reducing-valve",
+  "pressure-reducing-valve": "high-water-pressure-pressure-reducing-valve",
+  "backflow-preventer": "backflow-preventer-repair-installation",
+  "backflow-repair": "backflow-preventer-repair-installation",
+  "repipe": "whole-house-repipe",
+  "repipe-guide": "whole-house-repipe",
+  "cast-iron-pipe-replacement": "cast-iron-galvanized-pipe-replacement",
+  "galvanized-pipe-replacement": "cast-iron-galvanized-pipe-replacement",
+};
 
 interface Props {
   params: Promise<{ state: string }>;
@@ -24,8 +37,9 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state } = await params;
 
-  // 1. Check if authority hub
-  const hub = getAuthorityHub(state);
+  // Handle Hub Aliases
+  const targetSlug = HUB_ALIASES[state] || state;
+  const hub = getAuthorityHub(targetSlug);
   if (hub) {
     const canonicalUrl = `${SITE_URL}/${hub.slug}`;
     return {
@@ -40,10 +54,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  // 2. Check if state code
+  // Check state code
   const stateCode = state.toUpperCase();
-  const stateRow = await getStateByCode(stateCode);
-  if (!stateRow) return { title: "Not Found" };
+  const [stateRow, drippedLocations] = await Promise.all([
+    getStateByCode(stateCode),
+    getDripLocationsByState(stateCode),
+  ]);
+
+  if (!stateRow || drippedLocations.length === 0) return { title: "Not Found" };
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}`;
   return {
     title: `${NICHE} in ${stateRow.state_name} | ${BRAND_NAME}`,
@@ -56,25 +74,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StateOrHubPage({ params }: Props) {
   const { state } = await params;
 
-  // 1. Check if authority hub
+  // 1. Check if Hub Alias -> 301 Redirect to canonical spec slug
+  if (HUB_ALIASES[state]) {
+    redirect(`/${HUB_ALIASES[state]}`);
+  }
+
+  // 2. Check if authority hub
   const hub = getAuthorityHub(state);
   if (hub) {
     const dripLocations = await getDripLocations();
     return <HubTemplate hub={hub} locations={dripLocations} />;
   }
 
-  // 2. Check if state code
+  // 3. Check if state code
   const stateCode = state.toUpperCase();
-  const [stateRow, drippedLocations, allStateLocations] = await Promise.all([
+  const [stateRow, drippedLocations] = await Promise.all([
     getStateByCode(stateCode),
     getDripLocationsByState(stateCode),
-    getLocationsByState(stateCode),
   ]);
 
-  if (!stateRow) notFound();
+  // STRICT ROUTE 3 BOUNDARY ENFORCEMENT:
+  // Non-dripped states (e.g. /ny, /tx, /il, /pa) MUST return HTTP 404
+  if (!stateRow || drippedLocations.length === 0) {
+    notFound();
+  }
 
-  // If drip locations exist for this state, prioritize them; otherwise show top population cities
-  const displayLocations = drippedLocations.length > 0 ? drippedLocations : allStateLocations.slice(0, 40);
+  const displayLocations = drippedLocations;
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
   const stateJsonLd = {
@@ -107,7 +132,7 @@ export default async function StateOrHubPage({ params }: Props) {
         }}
       >
         <span style={{ color: t.palette.accent, fontWeight: 800 }}>● 24/7 LIVE DISPATCH</span>
-        {" "}&mdash; Serving All of {stateRow.state_name} &mdash;{" "}
+        {" "}&mdash; Serving Active Metros in {stateRow.state_name} &mdash;{" "}
         <a href={`tel:${PHONE_TEL}`} style={{ color: t.palette.text, fontWeight: 800, textDecoration: "none" }}>
           Call {PHONE_NUMBER}
         </a>
@@ -154,7 +179,7 @@ export default async function StateOrHubPage({ params }: Props) {
               ☎ Call {PHONE_NUMBER}
             </a>
             <span style={{ fontSize: "0.85rem", color: t.palette.muted, fontWeight: 600 }}>
-              ✓ Statewide Coverage &middot; 24/7 Service
+              ✓ Verified Municipal Coverage &middot; 24/7 Service
             </span>
           </div>
         </div>
@@ -166,7 +191,7 @@ export default async function StateOrHubPage({ params }: Props) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
             <div>
               <div style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.12em", color: t.palette.accent, textTransform: "uppercase" }}>
-                Service Areas
+                Active Service Metros
               </div>
               <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: t.palette.text, marginTop: 4 }}>
                 Active Service Hubs in {stateRow.state_name}
@@ -214,10 +239,10 @@ export default async function StateOrHubPage({ params }: Props) {
       <section style={{ backgroundColor: t.palette.accent, padding: "48px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <h2 style={{ fontSize: "1.8rem", fontWeight: 900, color: t.palette.accentText || "#ffffff", marginBottom: 12 }}>
-            Need A Plumber Anywhere in {stateRow.state_name}?
+            Need A Plumber in {stateRow.state_name}?
           </h2>
           <p style={{ color: t.palette.accentText || "#ffffff", opacity: 0.9, marginBottom: 24, fontSize: "1rem" }}>
-            Our verified statewide technicians are available 24/7.
+            Our verified technicians are available 24/7.
           </p>
           <a
             href={`tel:${PHONE_TEL}`}

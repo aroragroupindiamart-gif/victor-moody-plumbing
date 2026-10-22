@@ -1,0 +1,5 @@
+{
+  "version": "route3-v3.2",
+  "deployedAt": "2026-10-22T09:57:49.538Z",
+  "commitMessage": "Enforce Route 3 direct 46-URL sitemap, hub 301 redirects, kill /ny/ zombie, DID integration"
+}

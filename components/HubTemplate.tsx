@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { AuthorityHub } from "@/lib/hubs";
 import { Location } from "@/lib/data";
-import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL } from "@/lib/config";
+import { BRAND_NAME, PHONE_NUMBER, PHONE_TEL, getDidForService } from "@/lib/config";
 import Footer from "@/components/Footer";
 
 export default function HubTemplate({
@@ -11,6 +11,7 @@ export default function HubTemplate({
   hub: AuthorityHub;
   locations: Location[];
 }) {
+  const did = getDidForService(hub.category);
   let serviceSlug = "water-pressure-problems";
   if (hub.category === "backflow") {
     serviceSlug = "backflow-preventer-testing";
@@ -27,7 +28,7 @@ export default function HubTemplate({
             {BRAND_NAME}
           </Link>
           <a
-            href={`tel:${PHONE_TEL}`}
+            href={`tel:${did.tel}`}
             style={{
               padding: "10px 20px",
               backgroundColor: "#2563EB",
@@ -43,7 +44,7 @@ export default function HubTemplate({
             }}
           >
             <span>☎</span>
-            <span>24/7 Dispatch: {PHONE_NUMBER}</span>
+            <span>24/7 Dispatch: {did.number}</span>
           </a>
         </div>
       </header>
@@ -75,7 +76,7 @@ export default function HubTemplate({
 
           <div style={{ display: "inline-flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
             <a
-              href={`tel:${PHONE_TEL}`}
+              href={`tel:${did.tel}`}
               style={{
                 padding: "16px 36px",
                 backgroundColor: "#2563EB",
@@ -91,7 +92,7 @@ export default function HubTemplate({
               }}
             >
               <span>☎ Call 24/7 Technician Intake:</span>
-              <span>{PHONE_NUMBER}</span>
+              <span>{did.number}</span>
             </a>
           </div>
         </div>
@@ -268,7 +269,7 @@ export default function HubTemplate({
             Speak directly with our local diagnostic intake desk. Upfront estimates, verified state-licensed contractors, and zero after-hours emergency surcharge fees.
           </p>
           <a
-            href={`tel:${PHONE_TEL}`}
+            href={`tel:${did.tel}`}
             style={{
               padding: "16px 36px",
               backgroundColor: "#2563EB",
@@ -284,7 +285,7 @@ export default function HubTemplate({
             }}
           >
             <span>☎</span>
-            <span>Call Now: {PHONE_NUMBER}</span>
+            <span>Call Now: {did.number}</span>
           </a>
         </section>
       </main>

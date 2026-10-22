@@ -10,6 +10,7 @@ import {
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, SITE_URL,
   NICHE, NICHE_PLURAL, NICHE_SINGULAR, SCHEMA_TYPE, CONTENT_SALT, ACTIVE_CONCEPT,
+  getDidForService,
 } from "@/lib/config";
 import { selectVariant } from "@/lib/spintax";
 import { CONTENT_PACK, renderTemplate } from "@/lib/content";
@@ -23,7 +24,7 @@ import {
 } from "@/components/landing-components";
 import { tokens } from "@/lib/tokens";
 
-export const revalidate = 2592000; // 30 days
+export const revalidate = 300; // 5 minutes cache
 export const dynamicParams = true;
 
 interface Props {
@@ -46,8 +47,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const allowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
   if (!allowed) return { title: "Not Found" };
 
+  const did = getDidForService(svc.service_slug);
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
-  const description = `Need ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}? ${BRAND_NAME} provides 24/7 licensed service. Call ${PHONE_NUMBER} now.`.slice(0, 155);
+  const description = `Need ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}? ${BRAND_NAME} provides 24/7 licensed service. Call ${did.number} now.`.slice(0, 155);
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}`;
 
   return {
@@ -173,12 +175,14 @@ export default async function ServicePage({ params }: Props) {
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}`;
   const { rating, reviewCount } = getRating(loc.id, svc.id);
 
+  const did = getDidForService(svc.service_slug);
+
   const serviceJsonLd = {
     "@context": "https://schema.org",
     "@type": SCHEMA_TYPE,
     name: `${BRAND_NAME} — ${svc.service_name}`,
     description: `Professional ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}. Licensed and insured. Available 24/7.`,
-    telephone: PHONE_NUMBER,
+    telephone: did.number,
     url: canonicalUrl,
     areaServed: {
       "@type": "City",
@@ -236,8 +240,8 @@ export default async function ServicePage({ params }: Props) {
         city={loc.place_name}
         service={svc.service_name}
         serviceSlug={svc.service_slug}
-        phone={PHONE_NUMBER}
-        phoneHref={`tel:${PHONE_TEL}`}
+        phone={did.number}
+        phoneHref={`tel:${did.tel}`}
         rating={rating}
         reviewCount={reviewCount}
         responseTime="30–45 min"

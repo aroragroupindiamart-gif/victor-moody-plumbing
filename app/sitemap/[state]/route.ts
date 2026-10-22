@@ -4,9 +4,14 @@ import { SITE_URL } from "@/lib/config";
 
 const MAX_URLS = 50000;
 
+export const revalidate = 0;
+
 export async function generateStaticParams() {
   const states = await getDripStates();
-  return states.map((s) => ({ state: s.state_code.toLowerCase() }));
+  return [
+    { state: "main" },
+    ...states.map((s) => ({ state: s.state_code.toLowerCase() })),
+  ];
 }
 
 interface RouteProps {
