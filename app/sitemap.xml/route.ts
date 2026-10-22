@@ -7,7 +7,9 @@ export async function GET() {
   const states = await getDripStates();
   const today = new Date().toISOString().split("T")[0];
 
-  const entries: string[] = [];
+  const entries: string[] = [
+    `  <sitemap>\n    <loc>${SITE_URL}/sitemap/main.xml</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`,
+  ];
 
   for (const s of states) {
     const sc = s.state_code.toLowerCase();
