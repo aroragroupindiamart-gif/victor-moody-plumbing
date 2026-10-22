@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getFeaturedLocations, getAllServices } from "@/lib/data";
+import { getFeaturedLocations, getDripServices } from "@/lib/data";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, NICHE, NICHE_PLURAL,
   SCHEMA_TYPE, SITE_URL, CONTENT_SALT, ACTIVE_CONCEPT,
@@ -17,8 +17,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const featuredCities = await getFeaturedLocations(CONTENT_SALT, 16);
-  const allServices = await getAllServices();
-  const topServices = allServices.slice(0, 6);
+  const topServices = await getDripServices();
 
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
