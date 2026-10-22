@@ -1,4 +1,5 @@
 import { getDripLocations, getDripServices, getDripStates } from "@/lib/data";
+import { AUTHORITY_HUBS } from "@/lib/hubs";
 import { SITE_URL } from "@/lib/config";
 
 const MAX_URLS = 50000;
@@ -15,7 +16,29 @@ interface RouteProps {
 export async function GET(_req: Request, { params }: RouteProps) {
   const { state } = await params;
 
-  const clean = state.replace(/\.xml$/, "");
+    const clean = state.replace(/\.xml$/, "");
+
+  // Main Authority Hubs + Homepage Sitemap
+  if (clean === "main") {
+    const today = new Date().toISOString().split("T")[0];
+    const urls: string[] = [
+      `  <url>\n    <loc>${SITE_URL}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`
+    ];
+
+    for (const hub of AUTHORITY_HUBS) {
+      urls.push(
+        `  <url>\n    <loc>${SITE_URL}/${hub.slug}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>`
+      );
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+    return new Response(xml, {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    });
+  }
   const match = clean.match(/^([a-z]{2})(?:-(\d+))?$/);
   if (!match) return new Response("Not Found", { status: 404 });
 
