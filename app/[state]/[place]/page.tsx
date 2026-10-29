@@ -24,8 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const stateCode = state.toUpperCase();
   const loc = await getLocation(stateCode, place);
   if (!loc) return { title: "Not Found" };
-  const allowed = await isLocationAllowed(stateCode, place);
-  if (!allowed) return { title: "Not Found" };
 
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}`;
   return {
@@ -41,9 +39,6 @@ export default async function CityPage({ params }: Props) {
   const stateCode = state.toUpperCase();
   const loc = await getLocation(stateCode, place);
   if (!loc) notFound();
-
-  const allowed = await isLocationAllowed(stateCode, place);
-  if (!allowed) notFound();
 
   const services = await getServicesByLocationTier(loc.tier);
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;

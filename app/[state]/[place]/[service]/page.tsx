@@ -44,8 +44,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const stateCode = state.toUpperCase();
   const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
   if (!loc || !svc) return { title: "Not Found" };
-  const allowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
-  if (!allowed) return { title: "Not Found" };
 
   const did = getDidForService(svc.service_slug);
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
@@ -157,8 +155,6 @@ export default async function ServicePage({ params }: Props) {
 
   const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
   if (!loc || !svc) notFound();
-  const allowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
-  if (!allowed) notFound();
 
   const infra = getLocalInfrastructure(stateCode, place);
 
