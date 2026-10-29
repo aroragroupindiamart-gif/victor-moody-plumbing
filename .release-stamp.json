@@ -1,5 +1,1 @@
-{
-  "version": "route3-v3.3",
-  "deployedAt": "2026-10-22T11:09:58.866Z",
-  "commitMessage": "Remove sample reviews, add missing hub 308s, delete orphan sub-sitemaps, fix client hydration error boundary"
-}
+{"v": "middleware-artifact-redirect"}
