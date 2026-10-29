@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  getLocation, getService,
+  getLocation, getLocationBySlugOnly, getService,
   getSiblingServices, getNearbyLocations,
   isLocationAndServiceAllowed,
 } from "@/lib/data";
@@ -39,9 +39,21 @@ const CONCEPT_MAP: Record<string, any> = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, place, service: serviceSlug } = await params;
+
+  if (state.includes("{") || place.includes("{") || state.includes("$") || state.includes("&")) {
+    permanentRedirect("/");
+  }
+
   const stateCode = state.toUpperCase();
   const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
-  if (!loc || !svc) return { title: "Not Found" };
+  if (!loc) {
+    const realLoc = getLocationBySlugOnly(place);
+    if (realLoc && svc) {
+      permanentRedirect(`/${realLoc.state_code.toLowerCase()}/${realLoc.place_slug}/${svc.service_slug}`);
+    }
+    return { title: "Not Found" };
+  }
+  if (!svc) return { title: "Not Found" };
 
 
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
@@ -149,10 +161,22 @@ function getRating(locId: number, svcId: number): { rating: number; reviewCount:
 
 export default async function ServicePage({ params }: Props) {
   const { state, place, service: serviceSlug } = await params;
+
+  if (state.includes("{") || place.includes("{") || state.includes("$") || state.includes("&")) {
+    permanentRedirect("/");
+  }
+
   const stateCode = state.toUpperCase();
 
-  const [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
-  if (!loc || !svc) notFound();
+  let [loc, svc] = await Promise.all([getLocation(stateCode, place), getService(serviceSlug)]);
+  if (!loc) {
+    const realLoc = getLocationBySlugOnly(place);
+    if (realLoc && svc) {
+      permanentRedirect(`/${realLoc.state_code.toLowerCase()}/${realLoc.place_slug}/${svc.service_slug}`);
+    }
+    notFound();
+  }
+  if (!svc) notFound();
 
 
   const [siblings, nearby] = await Promise.all([

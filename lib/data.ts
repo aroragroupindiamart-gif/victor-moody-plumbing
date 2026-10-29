@@ -40,11 +40,15 @@ const POPULATION_SORTED_LOCATIONS = ALL_LOCATIONS.slice().sort(
 
 const locationByKey = new Map<string, Location>();
 const locationById  = new Map<number, Location>();
+const locationBySlugOnly = new Map<string, Location>();
 const serviceBySlug = new Map<string, Service>();
 
 for (const loc of ALL_LOCATIONS) {
   locationByKey.set(`${loc.state_code}|${loc.place_slug}`, loc);
   locationById.set(loc.id, loc);
+  if (!locationBySlugOnly.has(loc.place_slug)) {
+    locationBySlugOnly.set(loc.place_slug, loc);
+  }
 }
 for (const svc of ALL_SERVICES) {
   serviceBySlug.set(svc.service_slug, svc);
@@ -109,6 +113,10 @@ export async function getLocationsByState(stateCode: string): Promise<Location[]
 
 export async function getLocation(stateCode: string, placeSlug: string): Promise<Location | null> {
   return locationByKey.get(`${stateCode}|${placeSlug}`) ?? null;
+}
+
+export function getLocationBySlugOnly(placeSlug: string): Location | null {
+  return locationBySlugOnly.get(placeSlug.toLowerCase()) ?? null;
 }
 
 export async function getLocationById(id: number): Promise<Location | null> {

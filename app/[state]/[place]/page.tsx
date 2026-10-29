@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  getAllLocations, getLocation, getServicesByLocationTier,
+  getAllLocations, getLocation, getLocationBySlugOnly, getServicesByLocationTier,
   isLocationAllowed,
 } from "@/lib/data";
 import {
@@ -21,9 +21,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state, place } = await params;
+
+  if (state.includes("{") || place.includes("{") || state.includes("$") || state.includes("&")) {
+    permanentRedirect("/");
+  }
+
   const stateCode = state.toUpperCase();
   const loc = await getLocation(stateCode, place);
-  if (!loc) return { title: "Not Found" };
+  if (!loc) {
+    const realLoc = getLocationBySlugOnly(place);
+    if (realLoc) {
+      permanentRedirect(`/${realLoc.state_code.toLowerCase()}/${realLoc.place_slug}`);
+    }
+    return { title: "Not Found" };
+  }
 
 
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}`;
@@ -37,9 +48,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CityPage({ params }: Props) {
   const { state, place } = await params;
+
+  if (state.includes("{") || place.includes("{") || state.includes("$") || state.includes("&")) {
+    permanentRedirect("/");
+  }
+
   const stateCode = state.toUpperCase();
-  const loc = await getLocation(stateCode, place);
-  if (!loc) notFound();
+  let loc = await getLocation(stateCode, place);
+  if (!loc) {
+    const realLoc = getLocationBySlugOnly(place);
+    if (realLoc) {
+      permanentRedirect(`/${realLoc.state_code.toLowerCase()}/${realLoc.place_slug}`);
+    }
+    notFound();
+  }
 
 
 

@@ -37,11 +37,6 @@ export default async function HomePage() {
     "@type": "WebSite",
     name: BRAND_NAME,
     url: SITE_URL,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/{state}/{city}`,
-      "query-input": "required name=city",
-    },
   };
 
   return (
