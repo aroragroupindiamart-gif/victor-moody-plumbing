@@ -12,7 +12,7 @@ import {
 import Footer from "@/components/Footer";
 import { tokens } from "@/lib/tokens";
 
-export const revalidate = 300; // 5 minutes edge revalidation
+export const revalidate = 2592000; // 30 days edge cache
 export const dynamicParams = true;
 
 interface Props {
@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const stateCode = state.toUpperCase();
   const loc = await getLocation(stateCode, place);
   if (!loc) return { title: "Not Found" };
+
 
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}`;
   return {
@@ -39,6 +40,8 @@ export default async function CityPage({ params }: Props) {
   const stateCode = state.toUpperCase();
   const loc = await getLocation(stateCode, place);
   if (!loc) notFound();
+
+
 
   const services = await getServicesByLocationTier(loc.tier);
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
