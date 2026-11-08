@@ -170,28 +170,85 @@ export async function getNearbyLocations(locationId: number, stateCode: string, 
 }
 
 /* ================================================================
- * POPULATION-PRIORITY DRIP ENGINE (500 URLs / Day Natural Growth)
+ * 16-WEEK PROGRESSIVE CRAWL-BUDGET DRIP ENGINE
+ * Prevents queue clogging & algorithmic suppression by matching
+ * natural domain authority growth over 112 days (16 weeks).
  * ================================================================ */
 
-export function getDripLocationsCount(): number {
+export function getDaysElapsed(): number {
+  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE || new Date().toISOString().split("T")[0];
+  const launch = new Date(launchStr).getTime();
+  const now = Date.now();
+  return Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
+}
+
+/**
+ * 16-Week Progressive Metro Growth:
+ * - Weeks 1-2   (Days 0-14)  : Top 100 Metros
+ * - Weeks 3-4   (Days 15-28) : Top 250 Cities
+ * - Weeks 5-6   (Days 29-42) : Top 500 Cities
+ * - Weeks 7-8   (Days 43-56) : Top 800 Cities
+ * - Weeks 9-10  (Days 57-70) : Top 1,200 Cities
+ * - Weeks 11-12 (Days 71-84) : Top 1,600 Cities
+ * - Weeks 13-14 (Days 85-98) : Top 2,000 Cities
+ * - Weeks 15-16+ (Days 99+)  : All 2,249 Cities
+ */
+export function getDripLocationsCount(days = getDaysElapsed()): number {
   const envCount = process.env.NEXT_PUBLIC_DRIP_COUNT;
   if (envCount && !isNaN(Number(envCount))) {
     return Math.min(Number(envCount), POPULATION_SORTED_LOCATIONS.length);
   }
-  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE || new Date().toISOString().split("T")[0];
-  const launch = new Date(launchStr).getTime();
-  const now = Date.now();
-  const daysElapsed = Math.max(0, Math.floor((now - launch) / (1000 * 60 * 60 * 24)));
 
-  // Day 0/1: Top 60 cities (includes Anaheim & all Tier-1 metros). Each day expands by 50 cities (~500 URLs/day)
-  const allowed = 60 + daysElapsed * 50;
-  return Math.min(allowed, POPULATION_SORTED_LOCATIONS.length);
+  if (days < 14) {
+    return Math.min(60 + Math.floor(days * 3), 100);
+  }
+  if (days < 28) {
+    return Math.min(100 + Math.floor((days - 14) * 11), 250);
+  }
+  if (days < 42) {
+    return Math.min(250 + Math.floor((days - 28) * 18), 500);
+  }
+  if (days < 56) {
+    return Math.min(500 + Math.floor((days - 42) * 21), 800);
+  }
+  if (days < 70) {
+    return Math.min(800 + Math.floor((days - 56) * 29), 1200);
+  }
+  if (days < 84) {
+    return Math.min(1200 + Math.floor((days - 70) * 29), 1600);
+  }
+  if (days < 98) {
+    return Math.min(1600 + Math.floor((days - 84) * 29), 2000);
+  }
+  if (days < 112) {
+    return Math.min(2000 + Math.floor((days - 98) * 18), POPULATION_SORTED_LOCATIONS.length);
+  }
+
+  return POPULATION_SORTED_LOCATIONS.length;
 }
 
-export function getDripServicesCount(daysElapsed = 0): number {
-  if (daysElapsed < 14) return 10;   // Weeks 1-2: Core 10 high-intent services
-  if (daysElapsed < 30) return 25;   // Weeks 3-4: Top 25 services
-  return ALL_SERVICES.length;        // Day 30+: All 150 services
+/**
+ * 16-Week Progressive Service Expansion:
+ * - Weeks 1-2   (Days 0-14)  : Core 10 High-Intent Emergency Services
+ * - Weeks 3-4   (Days 15-28) : Top 15 Services
+ * - Weeks 5-6   (Days 29-42) : Top 25 Services
+ * - Weeks 7-8   (Days 43-56) : Top 35 Services
+ * - Weeks 9-10  (Days 57-70) : Top 50 Services
+ * - Weeks 11-12 (Days 71-84) : Top 75 Services
+ * - Weeks 13-14 (Days 85-98) : Top 100 Services
+ * - Weeks 15-16 (Days 99-112): Top 125 Services
+ * - Day 112+ (Week 16+)      : All 150 Services (Full Inventory)
+ */
+export function getDripServicesCount(days = getDaysElapsed()): number {
+  if (days < 14) return 10;
+  if (days < 28) return 15;
+  if (days < 42) return 25;
+  if (days < 56) return 35;
+  if (days < 70) return 50;
+  if (days < 84) return 75;
+  if (days < 98) return 100;
+  if (days < 112) return 125;
+  return ALL_SERVICES.length;
 }
 
 export async function getDripLocations(): Promise<Location[]> {
@@ -200,13 +257,7 @@ export async function getDripLocations(): Promise<Location[]> {
 }
 
 export async function getDripServices(): Promise<Service[]> {
-  const launchStr = LAUNCH_DATE || process.env.NEXT_PUBLIC_LAUNCH_DATE;
-  let daysElapsed = 0;
-  if (launchStr) {
-    const launch = new Date(launchStr).getTime();
-    daysElapsed = Math.max(0, Math.floor((Date.now() - launch) / (1000 * 60 * 60 * 24)));
-  }
-  const count = getDripServicesCount(daysElapsed);
+  const count = getDripServicesCount();
   return ALL_SERVICES.slice(0, count);
 }
 
