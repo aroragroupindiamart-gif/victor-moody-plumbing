@@ -1,4 +1,4 @@
-import locationsRaw from "./data/locations.json";
+import locationsRaw from "./data/locations-enriched.json";
 import servicesRaw from "./data/services.json";
 import { LAUNCH_DATE } from "./config";
 
@@ -21,6 +21,16 @@ export interface Location {
   population: number;
   area_code: string;
   tier: number;
+  water_hardness_ppm: number;
+  water_hardness_desc: string;
+  median_home_age: number;
+  pct_pre_1975_homes: number;
+  dominant_pipe_era: string;
+  frost_line_depth_inches: number;
+  climate_zone: string;
+  municipal_psi_standard: string;
+  water_district_name: string;
+  permit_authority: string;
 }
 
 export interface StateRow {
