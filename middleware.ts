@@ -4,6 +4,15 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Sitemap aliases to bypass Google Search Console cached sitemap index records
+  if (
+    pathname === "/sitemap-main.xml" ||
+    pathname === "/sitemap_v2.xml" ||
+    pathname === "/sitemap-fresh.xml"
+  ) {
+    return NextResponse.rewrite(new URL("/sitemap.xml", request.url));
+  }
+
   // Intercept crawler artifacts: /&, /$, /{state}/{city}, or any un-interpolated template variables
   if (
     pathname === "/&" ||

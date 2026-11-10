@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import {
   getStateByCode,
-  getDripLocationsByState, getDripLocations,
+  getDripLocationsByState, getDripLocations, getLocationsByState,
 } from "@/lib/data";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, SITE_URL, NICHE, NICHE_PLURAL,
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     getDripLocationsByState(stateCode),
   ]);
 
-  if (!stateRow || drippedLocations.length === 0) return { title: "Not Found" };
+  if (!stateRow) return { title: "Not Found" };
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}`;
   return {
     title: `${NICHE} in ${stateRow.state_name} | ${BRAND_NAME}`,
@@ -95,14 +95,12 @@ export default async function StateOrHubPage({ params }: Props) {
     getStateByCode(stateCode),
     getDripLocationsByState(stateCode),
   ]);
-
-  // STRICT ROUTE 3 BOUNDARY ENFORCEMENT:
-  // Non-dripped states (e.g. /ny, /tx, /il, /pa) MUST return HTTP 404
-  if (!stateRow || drippedLocations.length === 0) {
+  if (!stateRow) {
     notFound();
   }
 
-  const displayLocations = drippedLocations;
+  const allStateLocations = await getLocationsByState(stateCode);
+  const displayLocations = drippedLocations.length > 0 ? drippedLocations : allStateLocations.slice(0, 10);
   const t = (tokens as Record<string, any>)[ACTIVE_CONCEPT] || tokens.dispatch;
 
   const stateJsonLd = {

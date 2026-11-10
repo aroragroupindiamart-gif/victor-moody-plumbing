@@ -75,7 +75,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Not Found" };
   }
   if (!svc) return { title: "Not Found" };
-: lock proven data-driven narrative engine and boilerplate CI gates into base template)
 
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
   const description = `Need ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}? ${BRAND_NAME} provides 24/7 licensed service. Call ${PHONE_NUMBER} now.`.slice(0, 155);
@@ -198,7 +197,6 @@ export default async function ServicePage({ params }: Props) {
     notFound();
   }
   if (!svc) notFound();
-: lock proven data-driven narrative engine and boilerplate CI gates into base template)
 
   const [siblings, nearby] = await Promise.all([
     getSiblingServices(loc.id, svc.id, 5),
