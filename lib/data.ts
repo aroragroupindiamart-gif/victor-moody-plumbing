@@ -23,6 +23,7 @@ export interface Location {
   tier: number;
   water_hardness_ppm: number;
   water_hardness_desc: string;
+  median_home_year: number;
   median_home_age: number;
   pct_pre_1975_homes: number;
   dominant_pipe_era: string;
@@ -30,7 +31,15 @@ export interface Location {
   climate_zone: string;
   municipal_psi_standard: string;
   water_district_name: string;
+  water_district_verified?: boolean;
   permit_authority: string;
+  data_sources?: {
+    median_home_year: string;
+    water_hardness: string;
+    climate_frost: string;
+    permit_authority: string;
+    water_district: string;
+  };
 }
 
 export interface StateRow {

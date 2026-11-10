@@ -252,8 +252,9 @@ export function ResponseTimeIndicator({ responseTime = "—", label = "Average r
   );
 }
 
-/** Star rating summary — numbers are props, sourced from your review data. */
-export function RatingSummary({ rating = 4.8, reviewCount = 337, className = "" }) {
+/** Star rating summary — only renders if genuine review data is provided. */
+export function RatingSummary({ rating = 0, reviewCount = 0, className = "" }) {
+  if (!rating) return null;
   return (
     <div className={`flex items-center gap-2 ${className}`} aria-label={`Rated ${rating} out of 5 from ${reviewCount} reviews`}>
       <span aria-hidden="true" className="text-lg tracking-tight text-amber-500">★★★★★</span>

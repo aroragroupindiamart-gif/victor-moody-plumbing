@@ -42,15 +42,24 @@ function audit() {
       }
 
       let missingFieldsCount = 0;
+      let missingSourcesCount = 0;
       for (const l of locs) {
-        if (!l.water_hardness_ppm || !l.permit_authority || !l.dominant_pipe_era || l.frost_line_depth_inches === undefined) {
+        if (!l.water_hardness_ppm || !l.permit_authority || !l.dominant_pipe_era || l.frost_line_depth_inches === undefined || !l.median_home_year) {
           missingFieldsCount++;
+        }
+        if (!l.data_sources || !l.data_sources.median_home_year || !l.data_sources.water_hardness) {
+          missingSourcesCount++;
         }
       }
       if (missingFieldsCount > 0) {
-        errors.push(`Found ${missingFieldsCount} cities with missing required enrichment fields!`);
+        errors.push(`Found ${missingFieldsCount} cities with missing required enrichment fields (including median_home_year)!`);
       } else {
-        console.log(`[PASS] 100% of cities contain complete local engineering fields.`);
+        console.log(`[PASS] 100% of cities contain complete local engineering fields & median_home_year.`);
+      }
+      if (missingSourcesCount > 0) {
+        errors.push(`Found ${missingSourcesCount} cities with missing data_sources metadata!`);
+      } else {
+        console.log(`[PASS] 100% of cities contain verifiable data_sources metadata.`);
       }
     } catch (e) {
       errors.push(`Failed parsing locations-enriched.json: ${e.message}`);
@@ -82,6 +91,18 @@ function audit() {
       errors.push('Fabricated aggregateRating detected in Schema JSON-LD! Google requires genuine verified reviews.');
     } else {
       console.log('[PASS] Schema JSON-LD verified free of fabricated aggregateRating.');
+    }
+
+    if (code.includes('function getRating') || code.includes('getRating(')) {
+      errors.push('Fabricated getRating() generator detected in service page.tsx!');
+    } else {
+      console.log('[PASS] Service page verified free of fabricated getRating() generator.');
+    }
+
+    if (code.includes('30–45 min') || code.includes('30-45 min')) {
+      errors.push('Unverified hardcoded "30-45 min" arrival promise in service page.tsx!');
+    } else {
+      console.log('[PASS] Service page verified with honest operational dispatch copy.');
     }
 
     if (code.includes('[object Object]')) {

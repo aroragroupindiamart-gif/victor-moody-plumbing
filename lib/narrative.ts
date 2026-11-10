@@ -9,8 +9,10 @@ export function generateLocalNarratives(loc: EnrichedLocation, svc: ServiceItem)
   const isToilet = svc.service_slug.includes("toilet");
   const isPipe = svc.service_slug.includes("pipe") || svc.service_slug.includes("leak") || svc.service_slug.includes("burst");
 
-  const homeYear = (loc as any).median_home_year || loc.median_home_age;
-  const utilityName = loc.water_district_name || `municipal water utility serving ${loc.place_name}`;
+  const homeYear = loc.median_home_year || loc.median_home_age;
+  const utilityName = loc.water_district_verified && loc.water_district_name
+    ? loc.water_district_name
+    : `municipal water utility serving ${loc.place_name}`;
   const permitOffice = loc.permit_authority || `${loc.place_name} Building and Safety Department`;
 
   // 1. Water Quality & Mineral Dynamics Block (Each sentence is locally anchored)

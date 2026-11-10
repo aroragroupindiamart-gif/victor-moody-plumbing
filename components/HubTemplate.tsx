@@ -55,8 +55,7 @@ export default function HubTemplate({
           {/* Trust Badges */}
           <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 9999, backgroundColor: "rgba(34, 197, 94, 0.15)", color: "#22C55E", fontSize: "0.825rem", fontWeight: 800 }}>
-              <span>★ 4.8 / 5.0</span>
-              <span>&middot; Verified Local Specialist Network</span>
+              <span>✓ Verified Local Specialist Network</span>
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 9999, backgroundColor: "rgba(37, 99, 235, 0.15)", color: "#60A5FA", fontSize: "0.825rem", fontWeight: 800 }}>
               {hub.badge}

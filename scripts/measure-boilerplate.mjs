@@ -5,6 +5,11 @@
  * 
  * Bar: Average boilerplate across pages MUST be <= 30.0%
  * (A sentence appearing in >= 80% of same-type pages is classified as boilerplate).
+ * 
+ * Modes:
+ * 1. Live mode (--live <url>): Fetches live HTTP 200 pages over the network.
+ * 2. Real Build mode (.next/server/app): Measures real compiled static HTML files output by Next.js.
+ * 3. In-memory mode (fallback / quick test): Synthesizes pages using real lib/narrative.ts and content packs.
  */
 
 import fs from 'fs';
@@ -42,6 +47,31 @@ function wordCount(text) {
   return (text.match(/\b\w+\b/g) || []).length;
 }
 
+function stripHtml(html) {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function findCompiledHtmlFiles(dir) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of list) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results = results.concat(findCompiledHtmlFiles(full));
+    } else if (entry.name.endsWith('.html') && !entry.name.startsWith('_') && entry.name !== 'index.html') {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
 function renderFullPageText(loc, svc, salt = 0, brand = "Victor Moody Plumbing") {
   const locId = loc.id;
   const svcId = svc.id;
@@ -57,27 +87,22 @@ function renderFullPageText(loc, svc, salt = 0, brand = "Victor Moody Plumbing")
     phoneNumber: "(800) 555-0100",
   };
 
-  // 1. Production Content Pack components
   const intro = renderTemplate(selectVariant(CONTENT_PACK.intro, locId, svcId + 11, salt), vars);
   const body1 = renderTemplate(selectVariant(CONTENT_PACK.body1, locId, svcId + 3, salt), vars);
   const body2 = renderTemplate(selectVariant(CONTENT_PACK.body2, locId, svcId + 5, salt), vars);
 
-  // 2. Trust bullets
   const sets = CONTENT_PACK.trustBulletSets;
   const set = sets[Math.abs((locId * 31 + svcId + salt * 97) % sets.length)];
   const trustText = set.map(t => renderTemplate(t, vars)).join(" ");
 
-  // 3. FAQs
   const faqCost = renderTemplate(selectVariant(CONTENT_PACK.faqCostAnswers, locId, svcId, salt), vars);
   const faqArrival = renderTemplate(selectVariant(CONTENT_PACK.faqArrivalAnswers, locId, svcId + 1, salt), vars);
   const faqBefore = renderTemplate(selectVariant(CONTENT_PACK.faqBeforeArrivalAnswers, locId, svcId + 3, salt), vars);
   const faqText = `${faqCost} ${faqArrival} ${faqBefore}`;
 
-  // 4. Real Data-Driven Local Narrative Engine
   const narrative = generateLocalNarratives(loc, svc);
   const narrativeText = `${narrative.waterDynamics} ${narrative.housingDiagnostic} ${narrative.climateProtocol} ${narrative.complianceSpecs.inspectionRequirement}`;
 
-  // 5. Shared Concept Shell & Navigation (Common baseline)
   const sharedShell = `${brand} Priority 24/7 Dispatch. Immediate emergency response in ${loc.place_name}, ${loc.state_code}. Licensed and insured local contractors. All Rights Reserved. Privacy Policy Terms of Service.`;
 
   return `${sharedShell} ${intro} ${body1} ${body2} ${trustText} ${faqText} ${narrativeText}`;
@@ -89,6 +114,8 @@ async function run() {
   console.log('='.repeat(65));
 
   let pages = [];
+  const nextAppBuildDir = path.join(rootDir, '.next/server/app');
+  const compiledFiles = findCompiledHtmlFiles(nextAppBuildDir);
 
   if (isLive && liveBaseUrl) {
     console.log(`[LIVE MODE] Fetching representative pages from ${liveBaseUrl}...`);
@@ -113,13 +140,7 @@ async function run() {
         const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (QualityGate/1.0)' } });
         if (res.status === 200) {
           const html = await res.text();
-          const cleanText = html
-            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/&[a-z]+;/gi, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
+          const cleanText = stripHtml(html);
           pages.push({ path: p, text: cleanText });
           console.log(`  ✓ Loaded ${p} (${wordCount(cleanText)} words)`);
         } else {
@@ -129,8 +150,18 @@ async function run() {
         console.error(`  ❌ Error fetching ${url}: ${e.message}`);
       }
     }
+  } else if (compiledFiles.length >= 12 && !args.includes('--force-in-memory')) {
+    console.log(`[REAL BUILD HTML MODE] Measuring ${compiledFiles.length} compiled Next.js static pages...`);
+    const step = Math.floor(compiledFiles.length / 12);
+    for (let i = 0; i < 12; i++) {
+      const filePath = compiledFiles[i * step];
+      const html = fs.readFileSync(filePath, 'utf8');
+      const cleanText = stripHtml(html);
+      const relPath = '/' + path.relative(nextAppBuildDir, filePath).replace(/\\/g, '/').replace(/\.html$/, '');
+      pages.push({ path: relPath, text: cleanText });
+    }
   } else {
-    console.log('[CI MODE] Testing real rendered narratives & content packs across US markets...');
+    console.log('[CI IN-MEMORY MODE] Testing real rendered narratives & content packs across US markets...');
     const locationsPath = path.join(rootDir, 'lib/data/locations-enriched.json');
     const servicesPath = path.join(rootDir, 'lib/data/services.json');
 

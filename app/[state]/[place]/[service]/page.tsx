@@ -42,11 +42,15 @@ const CONCEPT_MAP: Record<string, any> = {
 };
 
 export async function generateStaticParams() {
-  // Pre-render Day 1 active drip pages statically so 100% of sitemap URLs are instant static HTML
-  const [dripLocs, dripSvcs] = await Promise.all([getDripLocations(), getDripServices()]);
+  // Static-First: Pre-render top 50 major metros x 10 core services (500 static money pages)
+  // Hard-capped so build never exceeds 35s or memory limits on Cloudflare / GitHub Actions
+  const [allLocs, allSvcs] = await Promise.all([getAllLocations(), getAllServices()]);
+  const topMetros = allLocs.slice().sort((a, b) => b.population - a.population).slice(0, 50);
+  const coreServices = allSvcs.slice(0, 10);
+
   const params: { state: string; place: string; service: string }[] = [];
-  for (const loc of dripLocs) {
-    for (const svc of dripSvcs) {
+  for (const loc of topMetros) {
+    for (const svc of coreServices) {
       params.push({
         state: loc.state_code.toLowerCase(),
         place: loc.place_slug,
@@ -174,11 +178,7 @@ function faqItems(svcName: string, cityName: string, keywords: string[], locId: 
   ];
 }
 
-function getRating(locId: number, svcId: number): { rating: number; reviewCount: number } {
-  const seed = Math.abs(locId * 17 + svcId * 13);
-  const ratings = [4.5, 4.6, 4.7, 4.8, 4.9];
-  return { rating: ratings[seed % ratings.length], reviewCount: 50 + (seed % 451) };
-}
+
 
 export default async function ServicePage({ params }: Props) {
   const { state, place, service: serviceSlug } = await params;
@@ -210,7 +210,6 @@ export default async function ServicePage({ params }: Props) {
   const body1   = bodyParagraph1(svc.service_name, loc.place_name, svc.base_keywords, loc.id, svc.id);
   const body2   = bodyParagraph2(svc.service_name, loc.place_name, svc.base_keywords, loc.id, svc.id);
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}`;
-  const { rating, reviewCount } = getRating(loc.id, svc.id);
   const did = getDidForService(svc.service_slug);
 
   // Generate real, data-driven local engineering narratives
@@ -274,9 +273,9 @@ export default async function ServicePage({ params }: Props) {
         serviceSlug={svc.service_slug}
         phone={did.number}
         phoneHref={`tel:${did.tel}`}
-        rating={rating}
-        reviewCount={reviewCount}
-        responseTime="30–45 min"
+        rating={0}
+        reviewCount={0}
+        responseTime="Prompt Dispatch"
         licenseNo="State Licensed & Insured"
         brandName={BRAND_NAME}
       />
