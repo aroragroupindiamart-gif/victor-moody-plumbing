@@ -14,7 +14,7 @@ import HubTemplate from "@/components/HubTemplate";
 import { getAuthorityHub } from "@/lib/hubs";
 import { tokens } from "@/lib/tokens";
 
-export const revalidate = 300; // 5 minutes cache
+export const revalidate = 604800; // 7 days edge cache
 export const dynamicParams = true;
 
 const HUB_ALIASES: Record<string, string> = {

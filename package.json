@@ -10,9 +10,9 @@
     "deploy": "wrangler deploy",
     "start": "next start -p ${PORT:-3000}",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:boilerplate": "node scripts/measure-boilerplate.mjs",
+    "test:boilerplate": "node --experimental-strip-types scripts/measure-boilerplate.mjs",
     "test:audit": "node scripts/audit-out.mjs",
-    "test:quality": "node scripts/audit-out.mjs && node scripts/measure-boilerplate.mjs"
+    "test:quality": "node scripts/audit-out.mjs && node --experimental-strip-types scripts/measure-boilerplate.mjs"
   },
   "dependencies": {
     "next": "^15.3.3",
@@ -29,5 +29,11 @@
     "tailwindcss": "latest",
     "typescript": "~5.9.3",
     "wrangler": "^4.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }

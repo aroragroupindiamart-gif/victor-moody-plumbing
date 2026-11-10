@@ -8,10 +8,14 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 25
     permissions:
       contents: read
       deployments: write
@@ -54,6 +58,9 @@ jobs:
           NEXT_PUBLIC_LAUNCH_DATE: ${{ secrets.NEXT_PUBLIC_LAUNCH_DATE }}
           NEXT_PUBLIC_CONTENT_SALT: ${{ secrets.NEXT_PUBLIC_CONTENT_SALT }}
           NEXT_PUBLIC_DESIGN_CONCEPT: ${{ secrets.NEXT_PUBLIC_DESIGN_CONCEPT }}
+          NEXT_PUBLIC_PHONE_WATER_PRESSURE: ${{ secrets.NEXT_PUBLIC_PHONE_WATER_PRESSURE }}
+          NEXT_PUBLIC_PHONE_BACKFLOW: ${{ secrets.NEXT_PUBLIC_PHONE_BACKFLOW }}
+          NEXT_PUBLIC_PHONE_REPIPE: ${{ secrets.NEXT_PUBLIC_PHONE_REPIPE }}
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4

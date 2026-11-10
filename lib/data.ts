@@ -1,5 +1,5 @@
-import locationsRaw from "./data/locations-enriched.json";
-import servicesRaw from "./data/services.json";
+import locationsRaw from "./data/locations-enriched.json" with { type: "json" };
+import servicesRaw from "./data/services.json" with { type: "json" };
 import { LAUNCH_DATE } from "./config";
 
 export interface Service {
@@ -137,18 +137,25 @@ export async function getService(serviceSlug: string): Promise<Service | null> {
   return serviceBySlug.get(serviceSlug) ?? null;
 }
 
-export async function getServicesByLocationTier(_tier: number): Promise<Service[]> {
-  return ALL_SERVICES;
+export async function getServicesByLocationTier(tier: number): Promise<Service[]> {
+  // Tier 1 (major metros): up to 150 services
+  // Tier 2 (mid-sized cities): up to 75 services
+  // Tier 3 (rural / small towns): up to 25 services
+  const maxByTier = tier === 1 ? 150 : tier === 2 ? 75 : 25;
+  const dripCount = getDripServicesCount();
+  const allowedCount = Math.min(maxByTier, dripCount);
+  return ALL_SERVICES.slice(0, allowedCount);
 }
 
 export async function getServicesByLocation(locationId: number): Promise<Service[]> {
   const loc = locationById.get(locationId);
   if (!loc) return [];
-  return ALL_SERVICES;
+  return getServicesByLocationTier(loc.tier);
 }
 
-export async function isServiceAllowedForTier(_serviceId: number, _locationTier: number): Promise<boolean> {
-  return true;
+export async function isServiceAllowedForTier(serviceId: number, locationTier: number): Promise<boolean> {
+  const maxByTier = locationTier === 1 ? 150 : locationTier === 2 ? 75 : 25;
+  return serviceId <= maxByTier;
 }
 
 export async function getSiblingServices(locationId: number, serviceId: number, limit = 5): Promise<Service[]> {
@@ -263,7 +270,9 @@ export async function getDripServices(): Promise<Service[]> {
 
 export async function isLocationAllowed(stateCode: string, placeSlug: string): Promise<boolean> {
   const loc = await getLocation(stateCode, placeSlug);
-  return loc !== null;
+  if (!loc) return false;
+  const dripLocs = await getDripLocations();
+  return dripLocs.some((l) => l.id === loc.id);
 }
 
 export async function getDripLocationsByState(stateCode: string): Promise<Location[]> {
@@ -273,7 +282,14 @@ export async function getDripLocationsByState(stateCode: string): Promise<Locati
 
 export async function isLocationAndServiceAllowed(stateCode: string, placeSlug: string, serviceSlug: string): Promise<boolean> {
   const [loc, svc] = await Promise.all([getLocation(stateCode, placeSlug), getService(serviceSlug)]);
-  return loc !== null && svc !== null;
+  if (!loc || !svc) return false;
+
+  const dripLocs = await getDripLocations();
+  const isLocDripped = dripLocs.some((l) => l.id === loc.id);
+  if (!isLocDripped) return false;
+
+  const allowedServices = await getServicesByLocationTier(loc.tier);
+  return allowedServices.some((s) => s.id === svc.id);
 }
 
 export async function getDripStates(): Promise<StateRow[]> {

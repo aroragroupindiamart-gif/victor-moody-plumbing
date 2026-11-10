@@ -9,24 +9,28 @@ export function generateLocalNarratives(loc: EnrichedLocation, svc: ServiceItem)
   const isToilet = svc.service_slug.includes("toilet");
   const isPipe = svc.service_slug.includes("pipe") || svc.service_slug.includes("leak") || svc.service_slug.includes("burst");
 
+  const homeYear = (loc as any).median_home_year || loc.median_home_age;
+  const utilityName = loc.water_district_name || `municipal water utility serving ${loc.place_name}`;
+  const permitOffice = loc.permit_authority || `${loc.place_name} Building and Safety Department`;
+
   // 1. Water Quality & Mineral Dynamics Block (Each sentence is locally anchored)
   let waterDynamics = "";
   if (loc.water_hardness_ppm >= 180) {
-    waterDynamics = `Municipal water delivered across ${loc.place_name} by the ${loc.water_district_name} registers at an elevated ${loc.water_hardness_ppm} PPM (${loc.water_hardness_desc}). In residential ${svc.service_name.toLowerCase()} applications throughout ${loc.place_name}, this high concentration of dissolved calcium carbonate and magnesium significantly accelerates scale build-up inside heat exchangers, internal valve seats, and fixture aerators. Without routine maintenance or whole-home filtration in ${loc.county_name} County, mineral sedimentation hardens at the base of equipment, dropping thermal transfer efficiency by up to 25% and causing early element burnout or premature pressure relief valve leaks.`;
+    waterDynamics = `Municipal water delivered across ${loc.place_name} registers at an elevated ${loc.water_hardness_ppm} PPM (${loc.water_hardness_desc}). In residential ${svc.service_name.toLowerCase()} applications throughout ${loc.place_name}, this high concentration of dissolved calcium carbonate and magnesium significantly accelerates scale build-up inside ${isToilet ? "fill valve seals and tank components" : isDrain ? "drain traps and waste lines" : "heat exchangers and internal valve seats"}. Without routine maintenance or whole-home filtration in ${loc.county_name} County, mineral sedimentation hardens at the base of equipment, dropping operational efficiency and causing premature fixture degradation.`;
   } else if (loc.water_hardness_ppm >= 100) {
-    waterDynamics = `Water testing across ${loc.place_name} indicates an average mineral content of ${loc.water_hardness_ppm} PPM (${loc.water_hardness_desc}). While within safe municipal parameters, this moderate mineral level leaves noticeable white chalky scale around ${loc.place_name} faucet cartridges, shower diverters, and heating elements. Over a 3- to 5-year operational lifecycle in ${loc.place_name}, progressive calcification can constrict interior pipe diameter and cause intermittent pressure fluctuations across upper-level plumbing fixtures.`;
+    waterDynamics = `Water testing across ${loc.place_name} indicates an average mineral content of ${loc.water_hardness_ppm} PPM (${loc.water_hardness_desc}). While within safe municipal parameters, this moderate mineral level leaves noticeable white chalky scale around ${loc.place_name} faucet cartridges, shower diverters, and ${isToilet ? "toilet fill valves" : isDrain ? "waste interceptors" : "heating elements"}. Over a 3- to 5-year operational lifecycle in ${loc.place_name}, progressive calcification can constrict interior flow capacity and cause intermittent pressure fluctuations across fixtures.`;
   } else {
-    waterDynamics = `The ${loc.water_district_name} delivers water testing at ${loc.water_hardness_ppm} PPM, categorized as ${loc.water_hardness_desc} water. While naturally soft water prevents calcium scaling inside ${loc.place_name} pipes and fixtures, its low mineral index increases the natural corrosiveness of standing water against legacy copper and brass fittings. In older properties throughout ${loc.place_name}, our specialists carefully inspect fixture connections for pinhole oxidation and galvanic corrosion caused by acidic municipal pH balances.`;
+    waterDynamics = `Water delivered across ${loc.place_name} tests at ${loc.water_hardness_ppm} PPM, categorized as ${loc.water_hardness_desc} water. While naturally soft water prevents calcium scaling inside ${loc.place_name} pipes and fixtures, its low mineral index increases the natural corrosiveness of standing water against legacy copper and brass fittings. In older properties throughout ${loc.place_name}, our specialists carefully inspect fixture connections for pinhole oxidation and galvanic corrosion caused by acidic municipal pH balances.`;
   }
 
   // 2. Housing Construction Era & Infrastructure Diagnostic (Locally anchored)
   let housingDiagnostic = "";
   if (loc.pct_pre_1975_homes >= 50) {
-    housingDiagnostic = `Approximately ${loc.pct_pre_1975_homes}% of residential properties in ${loc.place_name} date back to the pre-1975 building boom, with an average construction era around ${loc.median_home_age}. Homes from this period across ${loc.place_name} were predominantly plumbed with ${loc.dominant_pipe_era.replace(/_/g, " ")}. Today, these legacy ${loc.place_name} systems frequently present internal rust buildup that restricts flow volume, failing galvanized nipples at wall transitions, and brittle cast-iron underground sewer laterals vulnerable to shifting soils and tree root intrusions.`;
+    housingDiagnostic = `Approximately ${loc.pct_pre_1975_homes}% of residential properties in ${loc.place_name} date back to the pre-1975 building boom, with a median construction year of ${homeYear}. Homes from this period across ${loc.place_name} were predominantly plumbed with ${loc.dominant_pipe_era.replace(/_/g, " ")}. Today, these legacy ${loc.place_name} systems frequently present ${isDrain ? "brittle cast-iron underground sewer laterals vulnerable to shifting soils and tree root intrusions" : isToilet ? "corroded closet flanges and undersized 3-inch drain stacks" : "internal rust buildup that restricts flow volume and failing galvanized nipples at wall transitions"}.`;
   } else if (loc.pct_pre_1975_homes >= 25) {
-    housingDiagnostic = `With a median residential construction year of ${loc.median_home_age}, neighborhoods across ${loc.place_name} feature a mixture of mid-century architectural additions and modern developments. Properties constructed between 1975 and 1995 in ${loc.county_name} County typically utilize copper distribution lines paired with PVC or ABS drainage stacks. When addressing ${svc.service_name.toLowerCase()} in ${loc.place_name}, our technicians evaluate solder-joint integrity, check for undersized water supply lines, and confirm proper atmospheric venting across secondary branch circuits.`;
+    housingDiagnostic = `With a median residential construction year of ${homeYear}, neighborhoods across ${loc.place_name} feature a mixture of mid-century architectural additions and modern developments. Properties constructed between 1975 and 1995 in ${loc.county_name} County typically utilize copper distribution lines paired with PVC or ABS drainage stacks. When addressing ${svc.service_name.toLowerCase()} in ${loc.place_name}, our technicians evaluate ${isDrain ? "drain slope gradients and camera-inspect main sewer branches" : isToilet ? "wax ring seals and water consumption efficiency" : "solder-joint integrity and atmospheric venting across branch circuits"}.`;
   } else {
-    housingDiagnostic = `Featuring newer residential developments with a median construction year of ${loc.median_home_age}, ${loc.place_name} homes predominantly incorporate modern PEX supply piping and engineered composite manifold systems. While modern PEX eliminates traditional metal corrosion and pinhole risks in ${loc.place_name}, these systems remain sensitive to excessive municipal pressure surges and improper crimp-ring tensions. Our ${loc.place_name} diagnostic process includes calibrated hydrostatic testing to verify lines remain within optimal operating limits.`;
+    housingDiagnostic = `Featuring newer residential developments with a median construction year of ${homeYear}, ${loc.place_name} homes predominantly incorporate modern PEX supply piping and engineered composite manifold systems. While modern PEX eliminates traditional metal corrosion in ${loc.place_name}, these systems remain sensitive to ${isDrain ? "improper secondary stack venting and pipe sagging" : isToilet ? "excessive municipal supply surges past standard 60 PSI" : "excessive municipal pressure surges and improper crimp-ring tensions"}. Our ${loc.place_name} diagnostic process includes calibrated pressure testing to verify lines remain within optimal operating limits.`;
   }
 
   // 3. Climate, Soil & Freeze Protocol (Locally anchored)
@@ -40,12 +44,21 @@ export function generateLocalNarratives(loc: EnrichedLocation, svc: ServiceItem)
   }
 
   // 4. Municipal Compliance & Permitting Box
+  let inspectionReq = `Standard trade compliance under ${loc.place_name} administrative building code.`;
+  if (isHeater || isPipe) {
+    inspectionReq = `Mandatory ${loc.place_name} municipal sign-off on pressure vessels and main line alterations.`;
+  } else if (isDrain) {
+    inspectionReq = `Municipal health and backflow compliance certification for main sewer laterals and trap seals in ${loc.place_name}.`;
+  } else if (isToilet) {
+    inspectionReq = `WaterSense high-efficiency certification and backflow prevention under ${loc.place_name} municipal standards.`;
+  }
+
   const complianceSpecs = {
-    utilityDistrict: loc.water_district_name,
+    utilityDistrict: utilityName,
     hardnessRating: `${loc.water_hardness_ppm} PPM (${loc.water_hardness_desc})`,
     psiStandard: loc.municipal_psi_standard,
-    permitDepartment: loc.permit_authority,
-    inspectionRequirement: isHeater || isPipe ? `Mandatory ${loc.place_name} municipal sign-off on pressure vessels and main line alterations` : `Standard trade compliance under ${loc.place_name} administrative building code`
+    permitDepartment: permitOffice,
+    inspectionRequirement: inspectionReq
   };
 
   return {

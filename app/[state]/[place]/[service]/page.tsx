@@ -6,10 +6,12 @@ import {
   getSiblingServices, getNearbyLocations,
   isLocationAndServiceAllowed,
   getAllLocations, getAllServices,
+  getDripLocations, getDripServices,
 } from "@/lib/data";
 import {
   BRAND_NAME, PHONE_NUMBER, PHONE_TEL, SITE_URL,
   NICHE, NICHE_PLURAL, NICHE_SINGULAR, SCHEMA_TYPE, CONTENT_SALT, ACTIVE_CONCEPT,
+  getDidForService,
 } from "@/lib/config";
 import { selectVariant } from "@/lib/spintax";
 import { CONTENT_PACK, renderTemplate } from "@/lib/content";
@@ -40,14 +42,11 @@ const CONCEPT_MAP: Record<string, any> = {
 };
 
 export async function generateStaticParams() {
-  // Pre-render top 50 metros x 10 core services (500 high-priority money pages) statically
-  const [allLocs, allSvcs] = await Promise.all([getAllLocations(), getAllServices()]);
-  const topMetros = allLocs.slice().sort((a, b) => b.population - a.population).slice(0, 50);
-  const coreServices = allSvcs.slice(0, 10);
-
+  // Pre-render Day 1 active drip pages statically so 100% of sitemap URLs are instant static HTML
+  const [dripLocs, dripSvcs] = await Promise.all([getDripLocations(), getDripServices()]);
   const params: { state: string; place: string; service: string }[] = [];
-  for (const loc of topMetros) {
-    for (const svc of coreServices) {
+  for (const loc of dripLocs) {
+    for (const svc of dripSvcs) {
       params.push({
         state: loc.state_code.toLowerCase(),
         place: loc.place_slug,
@@ -76,6 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   if (!svc) return { title: "Not Found" };
 
+  const isAllowed = await isLocationAndServiceAllowed(stateCode, place, serviceSlug);
   const title       = `${svc.service_name} in ${loc.place_name}, ${stateCode}`.slice(0, 60);
   const description = `Need ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}? ${BRAND_NAME} provides 24/7 licensed service. Call ${PHONE_NUMBER} now.`.slice(0, 155);
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}`;
@@ -83,6 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    robots: isAllowed ? { index: true, follow: true } : { index: false, follow: true },
     alternates: { canonical: canonicalUrl },
     openGraph: { title, description, url: canonicalUrl },
   };
@@ -210,6 +211,7 @@ export default async function ServicePage({ params }: Props) {
   const body2   = bodyParagraph2(svc.service_name, loc.place_name, svc.base_keywords, loc.id, svc.id);
   const canonicalUrl = `${SITE_URL}/${stateCode.toLowerCase()}/${loc.place_slug}/${svc.service_slug}`;
   const { rating, reviewCount } = getRating(loc.id, svc.id);
+  const did = getDidForService(svc.service_slug);
 
   // Generate real, data-driven local engineering narratives
   const narratives = generateLocalNarratives(loc, svc);
@@ -219,7 +221,7 @@ export default async function ServicePage({ params }: Props) {
     "@type": SCHEMA_TYPE,
     name: `${BRAND_NAME} — ${svc.service_name}`,
     description: `Professional ${svc.service_name.toLowerCase()} in ${loc.place_name}, ${loc.state_name}. Licensed and insured. Available 24/7.`,
-    telephone: PHONE_NUMBER,
+    telephone: did.number,
     url: canonicalUrl,
     areaServed: {
       "@type": "City",
@@ -227,13 +229,6 @@ export default async function ServicePage({ params }: Props) {
       containedInPlace: { "@type": "State", name: loc.state_name },
     },
     openingHours: "Mo-Su 00:00-23:59",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: rating,
-      reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: `${NICHE} Services`,
@@ -277,8 +272,8 @@ export default async function ServicePage({ params }: Props) {
         city={loc.place_name}
         service={svc.service_name}
         serviceSlug={svc.service_slug}
-        phone={PHONE_NUMBER}
-        phoneHref={`tel:${PHONE_TEL}`}
+        phone={did.number}
+        phoneHref={`tel:${did.tel}`}
         rating={rating}
         reviewCount={reviewCount}
         responseTime="30–45 min"

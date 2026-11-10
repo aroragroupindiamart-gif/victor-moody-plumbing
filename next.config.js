@@ -94,11 +94,6 @@ const nextConfig = {
         destination: "/cast-iron-galvanized-pipe-replacement",
         permanent: true,
       },
-      {
-        source: "/sitemap/:path*",
-        destination: "/sitemap.xml",
-        permanent: true,
-      },
     ];
   },
 };

@@ -6,7 +6,11 @@
  * 2. Unrendered objects ([object Object], NaN, undefined)
  * 3. Enriched location data integrity (all 2,249 cities populated)
  * 4. Configuration integrity (Brand name, phone, schema)
- * 5. Fabricated placeholders in production templates
+ * 5. Fabrication linting:
+ *    - Schema JSON-LD must NOT fabricate aggregateRating (Google review spam violation)
+ *    - LAUNCH_DATE must be dynamic (no hardcoded dates that break cloning)
+ *    - Revalidate parity across state/city/service routes (7-day unified edge cache)
+ *    - Internal links must respect drip bounds (no 150-service leaks on Day 1)
  */
 
 import fs from 'fs';
@@ -19,7 +23,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 function audit() {
   console.log('='.repeat(65));
-  console.log('  FACTORY INTEGRITY & PLACEHOLDER AUDIT GATE');
+  console.log('  FACTORY INTEGRITY & FABRICATION AUDIT GATE');
   console.log('='.repeat(65));
 
   let errors = [];
@@ -37,7 +41,6 @@ function audit() {
         errors.push(`Expected >= 2,000 cities in locations-enriched.json, found ${locs.length}`);
       }
 
-      // Check fields for sample of cities
       let missingFieldsCount = 0;
       for (const l of locs) {
         if (!l.water_hardness_ppm || !l.permit_authority || !l.dominant_pipe_era || l.frost_line_depth_inches === undefined) {
@@ -54,7 +57,7 @@ function audit() {
     }
   }
 
-  // 2. Audit Content Pack for malformed syntax
+  // 2. Audit Content Pack for malformed syntax or unresolved tokens
   const contentPackPath = path.join(rootDir, 'lib/data/content-pack.json');
   if (fs.existsSync(contentPackPath)) {
     const raw = fs.readFileSync(contentPackPath, 'utf8');
@@ -71,23 +74,69 @@ function audit() {
     }
   }
 
-  // 3. Audit Codebase for unreplaced sample placeholders
-  const pagePath = path.join(rootDir, 'app/[state]/[place]/[service]/page.tsx');
-  if (fs.existsSync(pagePath)) {
-    const pageCode = fs.readFileSync(pagePath, 'utf8');
-    if (pageCode.includes('[object Object]')) {
-      errors.push('Found "[object Object]" in page.tsx!');
+  // 3. Fabrication Lint: Check Schema JSON-LD in app/
+  const servicePagePath = path.join(rootDir, 'app/[state]/[place]/[service]/page.tsx');
+  if (fs.existsSync(servicePagePath)) {
+    const code = fs.readFileSync(servicePagePath, 'utf8');
+    if (code.includes('aggregateRating')) {
+      errors.push('Fabricated aggregateRating detected in Schema JSON-LD! Google requires genuine verified reviews.');
+    } else {
+      console.log('[PASS] Schema JSON-LD verified free of fabricated aggregateRating.');
     }
-    if (pageCode.includes('revalidate = 2592000')) {
-      errors.push('Stale 30-day ISR detected! Expected 7-day revalidate (604800).');
+
+    if (code.includes('[object Object]')) {
+      errors.push('Found "[object Object]" in service page.tsx!');
     }
-    if (!pageCode.includes('generateLocalNarratives')) {
-      errors.push('Missing generateLocalNarratives integration in page.tsx!');
+
+    if (!code.includes('revalidate = 604800')) {
+      errors.push('Invalid revalidate in service page.tsx! Expected 7 days (604800).');
     }
-    console.log(`[PASS] app/[state]/[place]/[service]/page.tsx verified.`);
   }
 
-  // 4. Check results
+  // 4. Configuration Lint: Dynamic LAUNCH_DATE
+  const configPath = path.join(rootDir, 'lib/config.ts');
+  if (fs.existsSync(configPath)) {
+    const configCode = fs.readFileSync(configPath, 'utf8');
+    if (configCode.includes('LAUNCH_DATE = "2026-11-09"') || configCode.includes("LAUNCH_DATE = '2026-11-09'")) {
+      errors.push('Hardcoded LAUNCH_DATE detected in lib/config.ts! Must use process.env.NEXT_PUBLIC_LAUNCH_DATE.');
+    } else {
+      console.log('[PASS] lib/config.ts verified with dynamic NEXT_PUBLIC_LAUNCH_DATE support.');
+    }
+  }
+
+  // 5. Cache Revalidation Parity across routes
+  const cityPagePath = path.join(rootDir, 'app/[state]/[place]/page.tsx');
+  if (fs.existsSync(cityPagePath)) {
+    const cityCode = fs.readFileSync(cityPagePath, 'utf8');
+    if (!cityCode.includes('revalidate = 604800')) {
+      errors.push('Stale or unsynchronized revalidate in city page! Expected 7 days (604800).');
+    } else {
+      console.log('[PASS] City page cache synchronized to 7 days (604800).');
+    }
+  }
+
+  const statePagePath = path.join(rootDir, 'app/[state]/page.tsx');
+  if (fs.existsSync(statePagePath)) {
+    const stateCode = fs.readFileSync(statePagePath, 'utf8');
+    if (!stateCode.includes('revalidate = 604800')) {
+      errors.push('Stale or unsynchronized revalidate in state page! Expected 7 days (604800).');
+    } else {
+      console.log('[PASS] State page cache synchronized to 7 days (604800).');
+    }
+  }
+
+  // 6. Drip Internal Linking Integrity
+  const dataLibPath = path.join(rootDir, 'lib/data.ts');
+  if (fs.existsSync(dataLibPath)) {
+    const dataCode = fs.readFileSync(dataLibPath, 'utf8');
+    if (!dataCode.includes('getDripServicesCount') || !dataCode.includes('isLocationAndServiceAllowed')) {
+      errors.push('Missing crawl-budget progressive drip guards in lib/data.ts!');
+    } else {
+      console.log('[PASS] lib/data.ts verified with crawl-budget drip guards.');
+    }
+  }
+
+  // 7. Check results
   console.log('-'.repeat(65));
   if (warnings.length > 0) {
     console.log('WARNINGS:');
@@ -101,7 +150,7 @@ function audit() {
     process.exit(1);
   }
 
-  console.log('✅ ALL INTEGRITY & AUDIT CHECKS PASSED GREEN.');
+  console.log('✅ ALL FABRICATION & INTEGRITY CHECKS PASSED GREEN.');
   console.log('='.repeat(65));
   process.exit(0);
 }

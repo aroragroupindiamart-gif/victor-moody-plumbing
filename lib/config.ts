@@ -12,8 +12,8 @@ export const GA_ID      = process.env.NEXT_PUBLIC_GA_ID      ?? "";
 export const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID ?? "";
 export const GSC_TOKEN  = process.env.NEXT_PUBLIC_GSC_TOKEN  ?? "";
 // Site launch date (YYYY-MM-DD) for automated drip feeding
-// Day 1 Crawl-Budget Reset: exactly 606 URLs in sitemap on Day 1
-export const LAUNCH_DATE = "2026-11-09";
+// Defaults to NEXT_PUBLIC_LAUNCH_DATE, or dynamically to today if not provided.
+export const LAUNCH_DATE = process.env.NEXT_PUBLIC_LAUNCH_DATE ?? new Date().toISOString().split("T")[0];
 
 /**
  * Per-site offset for spintax variant selection (see lib/spintax.ts).

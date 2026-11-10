@@ -1,4 +1,4 @@
-import pack from "./data/content-pack.json";
+import pack from "./data/content-pack.json" with { type: "json" };
 
 export interface ContentPack {
   intro: string[];
